@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Leads Imobiliários</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Definindo variáveis CSS para as cores da imobiliária */
+        :root {
+            --primary-blue: #3d357e;
+            --accent-yellow: #edae0f;
+            --light-blue-bg: #e0e2f5; /* Uma versão mais clara do azul para fundos sutis */
+            --light-yellow-bg: #fffbe6; /* Uma versão mais clara do amarelo para fundos sutis */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f8f8; /* Fundo geral mais claro */
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+            padding: 1.5rem; /* p-6 */
+        }
+        .input-field {
+            border: 1px solid var(--primary-blue); /* Borda com a cor azul primária */
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 0.75rem 1rem; /* px-4 py-3 */
+            width: 100%;
+            font-size: 1rem; /* text-base */
+            color: var(--primary-blue); /* Texto do input com a cor azul primária */
+        }
+        .input-field::placeholder {
+            color: #888; /* Cor do placeholder */
+        }
+        .table-header {
+            background-color: var(--light-blue-bg); /* Fundo do cabeçalho da tabela com azul claro */
+            color: var(--primary-blue); /* Texto do cabeçalho da tabela com azul primário */
+        }
+        /* Estilos específicos para os contadores de leads */
+        .lead-count-box {
+            background-color: var(--light-blue-bg); /* Fundo dos boxes de contagem */
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .lead-count-label {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 500; /* font-medium */
+            color: var(--primary-blue); /* Cor do texto da label */
+        }
+        .lead-count-number {
+            font-size: 1.75rem; /* text-2xl */
+            font-weight: 700; /* font-bold */
+            color: var(--accent-yellow); /* Cor do número com o amarelo de destaque */
+        }
+        /* Estilo para o box de MQLs */
+        .mql-summary-box {
+            background-color: var(--light-yellow-bg); /* Fundo com amarelo claro */
+            border: 1px solid var(--accent-yellow); /* Borda com amarelo de destaque */
+            color: var(--primary-blue); /* Texto com azul primário */
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+        .mql-summary-box h3 {
+            color: var(--primary-blue); /* Título do resumo MQL com azul primário */
+        }
+        .mql-summary-box .font-bold {
+            color: var(--accent-yellow); /* Números de MQL com amarelo de destaque */
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-8 px-4 sm:px-6 lg:px-8">
+    <header class="w-full max-w-4xl text-center mb-8">
+        <h1 class="text-4xl font-bold" style="color: var(--primary-blue);">Dashboard de Leads Imobiliários</h1>
+        <p class="text-gray-600">Visão geral dos leads de Venda e Locação por Unidade.</p>
+    </header>
+
+    <main class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- Card de Leads de Venda -->
+        <section class="card">
+            <h2 class="text-2xl font-semibold mb-4" style="color: var(--primary-blue);">Leads de Venda</h2>
+            <div class="space-y-4">
+                <div class="lead-count-box">
+                    <span class="lead-count-label">Unidade Centro:</span>
+                    <span id="vendaCentroCount" class="lead-count-number">0</span>
+                </div>
+                <div class="lead-count-box">
+                    <span class="lead-count-label">Unidade Sul:</span>
+                    <span id="vendaSulCount" class="lead-count-number">0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Card de Leads de Locação -->
+        <section class="card">
+            <h2 class="text-2xl font-semibold mb-4" style="color: var(--primary-blue);">Leads de Locação</h2>
+            <div class="space-y-4">
+                <div class="lead-count-box">
+                    <span class="lead-count-label">Unidade Sul:</span>
+                    <span id="locacaoSulCount" class="lead-count-number">0</span>
+                </div>
+                <!-- Mensagem para Locação no Centro -->
+                <div class="lead-count-box" style="background-color: #f3f4f6;"> <!-- Um cinza mais neutro para "Não Aplicável" -->
+                    <span class="lead-count-label" style="color: #6b7280;">Unidade Centro:</span>
+                    <span class="text-lg font-bold text-gray-500">Não Aplicável</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Card de MQLs (Entrada Manual) -->
+        <section class="card md:col-span-2">
+            <h2 class="text-2xl font-semibold mb-4" style="color: var(--primary-blue);">MQLs (Marketing Qualified Leads)</h2>
+            <p class="text-gray-600 mb-4">Insira os números de MQLs manualmente para cada unidade e tipo de negociação.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="mqlVendaCentro" class="block text-sm font-bold mb-2" style="color: var(--primary-blue);">MQL Venda - Centro:</label>
+                    <input type="number" id="mqlVendaCentro" class="input-field" placeholder="0" min="0">
+                </div>
+                <div>
+                    <label for="mqlVendaSul" class="block text-sm font-bold mb-2" style="color: var(--primary-blue);">MQL Venda - Sul:</label>
+                    <input type="number" id="mqlVendaSul" class="input-field" placeholder="0" min="0">
+                </div>
+                <div>
+                    <label for="mqlLocacaoSul" class="block text-sm font-bold mb-2" style="color: var(--primary-blue);">MQL Locação - Sul:</label>
+                    <input type="number" id="mqlLocacaoSul" class="input-field" placeholder="0" min="0">
+                </div>
+            </div>
+            <div class="mt-6 mql-summary-box">
+                <h3 class="font-semibold text-lg mb-2">Resumo dos MQLs Inseridos:</h3>
+                <p>MQL Venda - Centro: <span id="displayMqlVendaCentro" class="font-bold">0</span></p>
+                <p>MQL Venda - Sul: <span id="displayMqlVendaSul" class="font-bold">0</span></p>
+                <p>MQL Locação - Sul: <span id="displayMqlLocacaoSul" class="font-bold">0</span></p>
+            </div>
+        </section>
+
+        <!-- Tabela de Leads Brutos (Opcional - para debug/visualização completa) -->
+        <section class="card md:col-span-2">
+            <h2 class="text-2xl font-semibold mb-4" style="color: var(--primary-blue);">Detalhes dos Leads (Primeiras 10 linhas)</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white rounded-lg overflow-hidden">
+                    <thead>
+                        <tr class="table-header">
+                            <th class="py-3 px-4 text-left text-sm font-semibold">ID</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold">Nome do Lead</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold">Tipo de Negociação</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold">Bairro Combinado</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold">Unidade</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold">Etapa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leadsTableBody" class="divide-y divide-gray-200">
+                        <!-- Dados dos leads serão inseridos aqui pelo JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-sm text-gray-500 mt-4">Exibindo apenas as primeiras 10 linhas para visualização rápida.</p>
+        </section>
+
+    </main>
+
+    <!-- PapaParse CDN for CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const csvFilePath = 'leads_processados_atualizado.csv';
+
+            // Elementos para exibir os totais
+            const vendaCentroCountElem = document.getElementById('vendaCentroCount');
+            const vendaSulCountElem = document.getElementById('vendaSulCount');
+            const locacaoSulCountElem = document.getElementById('locacaoSulCount');
+            const leadsTableBody = document.getElementById('leadsTableBody');
+
+            // Elementos para MQLs manuais
+            const mqlVendaCentroInput = document.getElementById('mqlVendaCentro');
+            const mqlVendaSulInput = document = document.getElementById('mqlVendaSul');
+            const mqlLocacaoSulInput = document.getElementById('mqlLocacaoSul');
+            const displayMqlVendaCentro = document.getElementById('displayMqlVendaCentro');
+            const displayMqlVendaSul = document.getElementById('displayMqlVendaSul');
+            const displayMqlLocacaoSul = document.getElementById('displayMqlLocacaoSul');
+
+            // Funções para categorização de bairros (replicando a lógica Python)
+            const centroNeighborhoods = ['Centro', 'Agronômica', 'Saco dos Limões', 'Itacorubi'];
+            const sulNeighborhoods = ['Campeche', 'Ribeirao da Ilha', 'Rio Tavares', 'Morro das Pedras',
+                                    'Novo Campeche', 'Tapera', 'Carianos', 'Pântano do Sul', 'Costeira do Pirajubaé', 'Armação'];
+            const norteNeighborhoods = ['João Paulo', 'Cacupé', 'Saco Grande', 'Jurerê'];
+            const lesteNeighborhoods = ['Lagoa da Conceição', 'Praia Brava', 'Córrego Grande', 'Santa Mônica'];
+
+            function categorizeNeighborhood(neighborhood) {
+                if (!neighborhood || neighborhood.trim() === '') {
+                    return 'Não Informado';
+                }
+                const trimmedNeighborhood = neighborhood.trim();
+                if (centroNeighborhoods.includes(trimmedNeighborhood)) {
+                    return 'Centro';
+                } else if (sulNeighborhoods.includes(trimmedNeighborhood)) {
+                    return 'Sul';
+                } else if (norteNeighborhoods.includes(trimmedNeighborhood)) {
+                    return 'Norte';
+                } else if (lesteNeighborhoods.includes(trimmedNeighborhood)) {
+                    return 'Leste';
+                } else {
+                    return 'Outros';
+                }
+            }
+
+            // Função para carregar e processar o CSV
+            function loadAndProcessCSV() {
+                PapaParse.parse(csvFilePath, {
+                    download: true, // Permite que o PapaParse baixe o arquivo
+                    header: true,   // Trata a primeira linha como cabeçalho
+                    delimiter: ';', // Define o delimitador como ponto e vírgula
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        const data = results.data;
+                        let vendaCentroCount = 0;
+                        let vendaSulCount = 0;
+                        let locacaoSulCount = 0;
+
+                        // Limpa a tabela antes de preencher
+                        leadsTableBody.innerHTML = '';
+
+                        data.forEach((row, index) => {
+                            // Garante que 'Bairro Principal' e 'Bairros (LS)' sejam strings ou vazios
+                            const bairroPrincipal = row['Bairro Principal'] ? String(row['Bairro Principal']).trim() : '';
+                            const bairrosLS = row['Bairros (LS)'] ? String(row['Bairros (LS)']).trim() : '';
+
+                            // Lógica para Bairro_Combinado (replicando o Python)
+                            const bairroCombinado = bairroPrincipal !== '' ? bairroPrincipal : bairrosLS;
+                            const unidade = categorizeNeighborhood(bairroCombinado);
+
+                            // Contagem de Leads
+                            if (row['Tipo de Negociação'] === 'Compradores') {
+                                if (unidade === 'Centro') {
+                                    vendaCentroCount++;
+                                } else if (unidade === 'Sul') {
+                                    vendaSulCount++;
+                                }
+                            } else if (row['Tipo de Negociação'] === 'Locatários') {
+                                // Apenas locação no Sul
+                                if (unidade === 'Sul') {
+                                    locacaoSulCount++;
+                                }
+                            }
+
+                            // Preenche a tabela de detalhes (primeiras 10 linhas)
+                            if (index < 10) {
+                                const tr = document.createElement('tr');
+                                tr.className = 'hover:bg-gray-50';
+                                tr.innerHTML = `
+                                    <td class="py-2 px-4 text-sm text-gray-700">${row['ID'] || ''}</td>
+                                    <td class="py-2 px-4 text-sm text-gray-700">${row['Nome do Lead'] || ''}</td>
+                                    <td class="py-2 px-4 text-sm text-gray-700">${row['Tipo de Negociação'] || ''}</td>
+                                    <td class="py-2 px-4 text-sm text-gray-700">${bairroCombinado || 'Não Informado'}</td>
+                                    <td class="py-2 px-4 text-sm text-gray-700">${unidade}</td>
+                                    <td class="py-2 px-4 text-sm text-gray-700">${row['Etapa'] || ''}</td>
+                                `;
+                                leadsTableBody.appendChild(tr);
+                            }
+                        });
+
+                        // Atualiza os elementos HTML com os totais
+                        vendaCentroCountElem.textContent = vendaCentroCount;
+                        vendaSulCountElem.textContent = vendaSulCount;
+                        locacaoSulCountElem.textContent = locacaoSulCount;
+                    },
+                    error: function(err, file) {
+                        console.error("Erro ao carregar ou analisar o CSV:", err, file);
+                        alert("Erro ao carregar os dados dos leads. Verifique se 'leads_processados_atualizado.csv' está na mesma pasta.");
+                    }
+                });
+            }
+
+            // Carrega os dados quando a página é carregada
+            loadAndProcessCSV();
+
+            // Adiciona listeners para os campos de MQLs para exibir os valores
+            function updateMqlDisplay(inputElement, displayElement) {
+                const value = inputElement.value === '' ? 0 : parseInt(inputElement.value, 10);
+                displayElement.textContent = value;
+            }
+
+            mqlVendaCentroInput.addEventListener('input', () => updateMqlDisplay(mqlVendaCentroInput, displayMqlVendaCentro));
+            mqlVendaSulInput.addEventListener('input', () => updateMqlDisplay(mqlVendaSulInput, displayMqlVendaSul));
+            mqlLocacaoSulInput.addEventListener('input', () => updateMqlDisplay(mqlLocacaoSulInput, displayMqlLocacaoSul));
+
+            // Inicializa os displays de MQL caso haja valores padrão (embora não haja neste caso)
+            updateMqlDisplay(mqlVendaCentroInput, displayMqlVendaCentro);
+            updateMqlDisplay(mqlVendaSulInput, displayMqlVendaSul);
+            updateMqlDisplay(mqlLocacaoSulInput, displayMqlLocacaoSul);
+        });
+    </script>
+</body>
+</html>
