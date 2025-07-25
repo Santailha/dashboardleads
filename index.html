@@ -27,13 +27,13 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
             padding: 1.5rem; /* p-6 */
         }
-        .input-field {
+        .input-field, .select-field {
             border: 1px solid var(--primary-blue); /* Borda com a cor azul primária */
             border-radius: 0.5rem; /* rounded-lg */
             padding: 0.75rem 1rem; /* px-4 py-3 */
             width: 100%;
             font-size: 1rem; /* text-base */
-            color: var(--primary-blue); /* Texto do input com a cor azul primária */
+            color: var(--primary-blue); /* Texto do input/select com a cor azul primária */
         }
         .input-field::placeholder {
             color: #888; /* Cor do placeholder */
@@ -75,6 +75,17 @@
         .mql-summary-box .font-bold {
             color: var(--accent-yellow); /* Números de MQL com amarelo de destaque */
         }
+        .filter-button {
+            background-color: var(--primary-blue);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        .filter-button:hover {
+            background-color: #2c266a; /* Um tom mais escuro do azul primário */
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center py-8 px-4 sm:px-6 lg:px-8">
@@ -83,38 +94,74 @@
         <p class="text-gray-600">Visão geral dos leads de Venda e Locação por Unidade.</p>
     </header>
 
-    <main class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
+    <main class="w-full max-w-4xl grid grid-cols-1 gap-6">
 
-        <!-- Card de Leads de Venda -->
+        <!-- Filtros de Mês e Semana -->
         <section class="card">
-            <h2 class="text-2xl font-semibold mb-4" style="color: var(--primary-blue);">Leads de Venda</h2>
-            <div class="space-y-4">
-                <div class="lead-count-box">
-                    <span class="lead-count-label">Unidade Centro:</span>
-                    <span id="vendaCentroCount" class="lead-count-number">0</span>
+            <h2 class="text-2xl font-semibold mb-4" style="color: var(--primary-blue);">Filtrar por Período</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                <div>
+                    <label for="monthFilter" class="block text-sm font-bold mb-2" style="color: var(--primary-blue);">Mês:</label>
+                    <select id="monthFilter" class="select-field">
+                        <option value="">Selecione o Mês</option>
+                        <option value="Janeiro">Janeiro</option>
+                        <option value="Fevereiro">Fevereiro</option>
+                        <option value="Março">Março</option>
+                        <option value="Abril">Abril</option>
+                        <option value="Maio">Maio</option>
+                        <option value="Junho">Junho</option>
+                        <option value="Julho">Julho</option>
+                        <option value="Agosto">Agosto</option>
+                        <option value="Setembro">Setembro</option>
+                        <option value="Outubro">Outubro</option>
+                        <option value="Novembro">Novembro</option>
+                        <option value="Dezembro">Dezembro</option>
+                    </select>
                 </div>
-                <div class="lead-count-box">
-                    <span class="lead-count-label">Unidade Sul:</span>
-                    <span id="vendaSulCount" class="lead-count-number">0</span>
+                <div>
+                    <label for="weekFilter" class="block text-sm font-bold mb-2" style="color: var(--primary-blue);">Semana:</label>
+                    <select id="weekFilter" class="select-field" disabled>
+                        <option value="">Selecione a Semana</option>
+                    </select>
+                </div>
+                <div>
+                    <button id="applyFilterBtn" class="filter-button w-full">Aplicar Filtro</button>
                 </div>
             </div>
         </section>
 
-        <!-- Card de Leads de Locação -->
-        <section class="card">
-            <h2 class="text-2xl font-semibold mb-4" style="color: var(--primary-blue);">Leads de Locação</h2>
-            <div class="space-y-4">
-                <div class="lead-count-box">
-                    <span class="lead-count-label">Unidade Sul:</span>
-                    <span id="locacaoSulCount" class="lead-count-number">0</span>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Card de Leads de Venda -->
+            <section class="card">
+                <h2 class="text-2xl font-semibold mb-4" style="color: var(--primary-blue);">Leads de Venda</h2>
+                <div class="space-y-4">
+                    <div class="lead-count-box">
+                        <span class="lead-count-label">Unidade Centro:</span>
+                        <span id="vendaCentroCount" class="lead-count-number">0</span>
+                    </div>
+                    <div class="lead-count-box">
+                        <span class="lead-count-label">Unidade Sul:</span>
+                        <span id="vendaSulCount" class="lead-count-number">0</span>
+                    </div>
                 </div>
-                <!-- Mensagem para Locação no Centro -->
-                <div class="lead-count-box" style="background-color: #f3f4f6;"> <!-- Um cinza mais neutro para "Não Aplicável" -->
-                    <span class="lead-count-label" style="color: #6b7280;">Unidade Centro:</span>
-                    <span class="text-lg font-bold text-gray-500">Não Aplicável</span>
+            </section>
+
+            <!-- Card de Leads de Locação -->
+            <section class="card">
+                <h2 class="text-2xl font-semibold mb-4" style="color: var(--primary-blue);">Leads de Locação</h2>
+                <div class="space-y-4">
+                    <div class="lead-count-box">
+                        <span class="lead-count-label">Unidade Sul:</span>
+                        <span id="locacaoSulCount" class="lead-count-number">0</span>
+                    </div>
+                    <!-- Mensagem para Locação no Centro -->
+                    <div class="lead-count-box" style="background-color: #f3f4f6;"> <!-- Um cinza mais neutro para "Não Aplicável" -->
+                        <span class="lead-count-label" style="color: #6b7280;">Unidade Centro:</span>
+                        <span class="text-lg font-bold text-gray-500">Não Aplicável</span>
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
+        </div>
 
         <!-- Card de MQLs (Entrada Manual) -->
         <section class="card md:col-span-2">
@@ -138,7 +185,7 @@
                 <h3 class="font-semibold text-lg mb-2">Resumo dos MQLs Inseridos:</h3>
                 <p>MQL Venda - Centro: <span id="displayMqlVendaCentro" class="font-bold">0</span></p>
                 <p>MQL Venda - Sul: <span id="displayMqlVendaSul" class="font-bold">0</span></p>
-                <p>MQL Locação - Sul: <span id="displayMqlLocacaoSul" class="font-bold">0</span></p>
+                <p>MQL Locacao - Sul: <span id="displayMqlLocacaoSul" class="font-bold">0</span></p>
             </div>
         </section>
 
@@ -173,6 +220,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const csvFilePath = 'leads_processados_atualizado.csv';
+            let allLeadsData = []; // Para armazenar todos os dados do CSV
 
             // Elementos para exibir os totais
             const vendaCentroCountElem = document.getElementById('vendaCentroCount');
@@ -182,11 +230,92 @@
 
             // Elementos para MQLs manuais
             const mqlVendaCentroInput = document.getElementById('mqlVendaCentro');
-            const mqlVendaSulInput = document = document.getElementById('mqlVendaSul');
+            const mqlVendaSulInput = document.getElementById('mqlVendaSul');
             const mqlLocacaoSulInput = document.getElementById('mqlLocacaoSul');
             const displayMqlVendaCentro = document.getElementById('displayMqlVendaCentro');
             const displayMqlVendaSul = document.getElementById('displayMqlVendaSul');
             const displayMqlLocacaoSul = document.getElementById('displayMqlLocacaoSul');
+
+            // Elementos de filtro
+            const monthFilter = document.getElementById('monthFilter');
+            const weekFilter = document.getElementById('weekFilter');
+            const applyFilterBtn = document.getElementById('applyFilterBtn');
+
+            // Mapeamento das datas das semanas (exemplo, você pode expandir)
+            const weeklyDates = {
+                "Janeiro": {
+                    "Semana 01": { start: "2025-01-01", end: "2025-01-09" },
+                    "Semana 02": { start: "2025-01-10", end: "2025-01-16" },
+                    "Semana 03": { start: "2025-01-17", end: "2025-01-23" },
+                    "Semana 04": { start: "2025-01-24", end: "2025-01-31" }
+                },
+                "Fevereiro": {
+                    "Semana 01": { start: "2025-02-01", end: "2025-02-06" },
+                    "Semana 02": { start: "2025-02-07", end: "2025-02-13" },
+                    "Semana 03": { start: "2025-02-14", end: "2025-02-20" },
+                    "Semana 04": { start: "2025-02-21", end: "2025-02-28" }
+                },
+                "Março": {
+                    "Semana 01": { start: "2025-03-01", end: "2025-03-06" },
+                    "Semana 02": { start: "2025-03-07", end: "2025-03-13" },
+                    "Semana 03": { start: "2025-03-14", end: "2025-03-20" },
+                    "Semana 04": { start: "2025-03-21", end: "2025-03-31" }
+                },
+                "Abril": {
+                    "Semana 01": { start: "2025-04-01", end: "2025-04-10" },
+                    "Semana 02": { start: "2025-04-11", end: "2025-04-17" },
+                    "Semana 03": { start: "2025-04-18", end: "2025-04-24" },
+                    "Semana 04": { start: "2025-04-25", end: "2025-04-30" }
+                },
+                "Maio": {
+                    "Semana 01": { start: "2025-05-01", end: "2025-05-08" },
+                    "Semana 02": { start: "2025-05-09", end: "2025-05-15" },
+                    "Semana 03": { start: "2025-05-16", end: "2025-05-22" },
+                    "Semana 04": { start: "2025-05-23", end: "2025-05-31" }
+                },
+                "Junho": {
+                    "Semana 01": { start: "2025-06-01", end: "2025-06-05" },
+                    "Semana 02": { start: "2025-06-06", end: "2025-06-12" },
+                    "Semana 03": { start: "2025-06-13", end: "2025-06-19" },
+                    "Semana 04": { start: "2025-06-20", end: "2025-06-30" }
+                },
+                "Julho": {
+                    "Semana 01": { start: "2025-07-01", end: "2025-07-10" },
+                    "Semana 02": { start: "2025-07-11", end: "2025-07-17" },
+                    "Semana 03": { start: "2025-07-18", end: "2025-07-24" },
+                    "Semana 04": { start: "2025-07-25", end: "2025-07-31" }
+                },
+                "Agosto": {
+                    "Semana 01": { start: "2025-08-01", end: "2025-08-07" },
+                    "Semana 02": { start: "2025-08-08", end: "2025-08-14" },
+                    "Semana 03": { start: "2025-08-15", end: "2025-08-21" },
+                    "Semana 04": { start: "2025-08-22", end: "2025-08-31" }
+                },
+                "Setembro": {
+                    "Semana 01": { start: "2025-09-01", end: "2025-09-08" },
+                    "Semana 02": { start: "2025-09-09", end: "2025-09-18" },
+                    "Semana 03": { start: "2025-09-19", end: "2025-09-25" },
+                    "Semana 04": { start: "2025-09-26", end: "2025-09-30" }
+                },
+                "Outubro": {
+                    "Semana 01": { start: "2025-10-01", end: "2025-10-09" },
+                    "Semana 02": { start: "2025-10-10", end: "2025-10-16" },
+                    "Semana 03": { start: "2025-10-17", end: "2025-10-23" },
+                    "Semana 04": { start: "2025-10-24", end: "2025-10-31" }
+                },
+                "Novembro": {
+                    "Semana 01": { start: "2025-11-01", end: "2025-11-06" },
+                    "Semana 02": { start: "2025-11-07", end: "2025-11-13" },
+                    "Semana 03": { start: "2025-11-14", end: "2025-11-20" },
+                    "Semana 04": { start: "2025-11-21", end: "2025-11-30" }
+                },
+                "Dezembro": {
+                    "Semana 01": { start: "2025-12-01", end: "2025-12-08" },
+                    "Semana 02": { start: "2025-12-09", end: "2025-12-18" },
+                    "Semana 03": { start: "2025-12-19", end: "2025-12-25" },
+                    "Semana 04": { start: "2025-12-26", end: "2025-12-31" }
+                }
+            };
 
             // Funções para categorização de bairros (replicando a lógica Python)
             const centroNeighborhoods = ['Centro', 'Agronômica', 'Saco dos Limões', 'Itacorubi'];
@@ -213,65 +342,79 @@
                 }
             }
 
+            // Helper function to parse date string from CSV (DD/MM/YYYY HH:MM:SS) to Date object
+            function parseCsvDate(dateString) {
+                if (!dateString) return null;
+                const [datePart, timePart] = dateString.split(' ');
+                const [day, month, year] = datePart.split('/');
+                const [hours, minutes, seconds] = timePart.split(':');
+                return new Date(year, month - 1, day, hours, minutes, seconds);
+            }
+
+            // Função para atualizar o dashboard com base nos dados filtrados
+            function updateDashboard(filteredData) {
+                let vendaCentroCount = 0;
+                let vendaSulCount = 0;
+                let locacaoSulCount = 0;
+
+                // Limpa a tabela antes de preencher
+                leadsTableBody.innerHTML = '';
+
+                filteredData.forEach((row, index) => {
+                    // Garante que 'Bairro Principal' e 'Bairros (LS)' sejam strings ou vazios
+                    const bairroPrincipal = row['Bairro Principal'] ? String(row['Bairro Principal']).trim() : '';
+                    const bairrosLS = row['Bairros (LS)'] ? String(row['Bairros (LS)']).trim() : '';
+
+                    // Lógica para Bairro_Combinado (replicando o Python)
+                    const bairroCombinado = bairroPrincipal !== '' ? bairroPrincipal : bairrosLS;
+                    const unidade = categorizeNeighborhood(bairroCombinado);
+
+                    // Contagem de Leads
+                    if (row['Tipo de Negociação'] === 'Compradores') {
+                        if (unidade === 'Centro') {
+                            vendaCentroCount++;
+                        } else if (unidade === 'Sul') {
+                            vendaSulCount++;
+                        }
+                    } else if (row['Tipo de Negociação'] === 'Locatários') {
+                        // Apenas locação no Sul
+                        if (unidade === 'Sul') {
+                            locacaoSulCount++;
+                        }
+                    }
+
+                    // Preenche a tabela de detalhes (primeiras 10 linhas)
+                    if (index < 10) {
+                        const tr = document.createElement('tr');
+                        tr.className = 'hover:bg-gray-50';
+                        tr.innerHTML = `
+                            <td class="py-2 px-4 text-sm text-gray-700">${row['ID'] || ''}</td>
+                            <td class="py-2 px-4 text-sm text-gray-700">${row['Nome do Lead'] || ''}</td>
+                            <td class="py-2 px-4 text-sm text-gray-700">${row['Tipo de Negociação'] || ''}</td>
+                            <td class="py-2 px-4 text-sm text-gray-700">${bairroCombinado || 'Não Informado'}</td>
+                            <td class="py-2 px-4 text-sm text-gray-700">${unidade}</td>
+                            <td class="py-2 px-4 text-sm text-gray-700">${row['Etapa'] || ''}</td>
+                        `;
+                        leadsTableBody.appendChild(tr);
+                    }
+                });
+
+                // Atualiza os elementos HTML com os totais
+                vendaCentroCountElem.textContent = vendaCentroCount;
+                vendaSulCountElem.textContent = vendaSulCount;
+                locacaoSulCountElem.textContent = locacaoSulCount;
+            }
+
             // Função para carregar e processar o CSV
             function loadAndProcessCSV() {
                 PapaParse.parse(csvFilePath, {
-                    download: true, // Permite que o PapaParse baixe o arquivo
-                    header: true,   // Trata a primeira linha como cabeçalho
-                    delimiter: ';', // Define o delimitador como ponto e vírgula
+                    download: true,
+                    header: true,
+                    delimiter: ';',
                     skipEmptyLines: true,
                     complete: function(results) {
-                        const data = results.data;
-                        let vendaCentroCount = 0;
-                        let vendaSulCount = 0;
-                        let locacaoSulCount = 0;
-
-                        // Limpa a tabela antes de preencher
-                        leadsTableBody.innerHTML = '';
-
-                        data.forEach((row, index) => {
-                            // Garante que 'Bairro Principal' e 'Bairros (LS)' sejam strings ou vazios
-                            const bairroPrincipal = row['Bairro Principal'] ? String(row['Bairro Principal']).trim() : '';
-                            const bairrosLS = row['Bairros (LS)'] ? String(row['Bairros (LS)']).trim() : '';
-
-                            // Lógica para Bairro_Combinado (replicando o Python)
-                            const bairroCombinado = bairroPrincipal !== '' ? bairroPrincipal : bairrosLS;
-                            const unidade = categorizeNeighborhood(bairroCombinado);
-
-                            // Contagem de Leads
-                            if (row['Tipo de Negociação'] === 'Compradores') {
-                                if (unidade === 'Centro') {
-                                    vendaCentroCount++;
-                                } else if (unidade === 'Sul') {
-                                    vendaSulCount++;
-                                }
-                            } else if (row['Tipo de Negociação'] === 'Locatários') {
-                                // Apenas locação no Sul
-                                if (unidade === 'Sul') {
-                                    locacaoSulCount++;
-                                }
-                            }
-
-                            // Preenche a tabela de detalhes (primeiras 10 linhas)
-                            if (index < 10) {
-                                const tr = document.createElement('tr');
-                                tr.className = 'hover:bg-gray-50';
-                                tr.innerHTML = `
-                                    <td class="py-2 px-4 text-sm text-gray-700">${row['ID'] || ''}</td>
-                                    <td class="py-2 px-4 text-sm text-gray-700">${row['Nome do Lead'] || ''}</td>
-                                    <td class="py-2 px-4 text-sm text-gray-700">${row['Tipo de Negociação'] || ''}</td>
-                                    <td class="py-2 px-4 text-sm text-gray-700">${bairroCombinado || 'Não Informado'}</td>
-                                    <td class="py-2 px-4 text-sm text-gray-700">${unidade}</td>
-                                    <td class="py-2 px-4 text-sm text-gray-700">${row['Etapa'] || ''}</td>
-                                `;
-                                leadsTableBody.appendChild(tr);
-                            }
-                        });
-
-                        // Atualiza os elementos HTML com os totais
-                        vendaCentroCountElem.textContent = vendaCentroCount;
-                        vendaSulCountElem.textContent = vendaSulCount;
-                        locacaoSulCountElem.textContent = locacaoSulCount;
+                        allLeadsData = results.data; // Armazena todos os dados
+                        applyFilter(); // Aplica o filtro inicial (sem filtro selecionado, mostrará tudo)
                     },
                     error: function(err, file) {
                         console.error("Erro ao carregar ou analisar o CSV:", err, file);
@@ -280,8 +423,48 @@
                 });
             }
 
-            // Carrega os dados quando a página é carregada
-            loadAndProcessCSV();
+            // Função para popular o dropdown de semanas
+            function populateWeekFilter() {
+                const selectedMonth = monthFilter.value;
+                weekFilter.innerHTML = '<option value="">Selecione a Semana</option>';
+                weekFilter.disabled = true;
+
+                if (selectedMonth && weeklyDates[selectedMonth]) {
+                    for (const week in weeklyDates[selectedMonth]) {
+                        const option = document.createElement('option');
+                        option.value = week;
+                        option.textContent = `${week} (${weeklyDates[selectedMonth][week].start.split('-').reverse().join('/')} - ${weeklyDates[selectedMonth][week].end.split('-').reverse().join('/')})`;
+                        weekFilter.appendChild(option);
+                    }
+                    weekFilter.disabled = false;
+                }
+            }
+
+            // Função para aplicar o filtro e atualizar o dashboard
+            function applyFilter() {
+                const selectedMonth = monthFilter.value;
+                const selectedWeek = weekFilter.value;
+                let filteredData = allLeadsData;
+
+                if (selectedMonth && selectedWeek) {
+                    const weekRange = weeklyDates[selectedMonth][selectedWeek];
+                    if (weekRange) {
+                        const startDate = new Date(weekRange.start + 'T00:00:00'); // Adiciona T00:00:00 para garantir fuso horário
+                        const endDate = new Date(weekRange.end + 'T23:59:59');   // Adiciona T23:59:59 para incluir o dia inteiro
+
+                        filteredData = allLeadsData.filter(row => {
+                            const leadDate = parseCsvDate(row['Data e hora da criação do Lead']);
+                            if (!leadDate) return false;
+                            return leadDate >= startDate && leadDate <= endDate;
+                        });
+                    }
+                }
+                updateDashboard(filteredData);
+            }
+
+            // Event Listeners
+            monthFilter.addEventListener('change', populateWeekFilter);
+            applyFilterBtn.addEventListener('click', applyFilter);
 
             // Adiciona listeners para os campos de MQLs para exibir os valores
             function updateMqlDisplay(inputElement, displayElement) {
@@ -297,6 +480,9 @@
             updateMqlDisplay(mqlVendaCentroInput, displayMqlVendaCentro);
             updateMqlDisplay(mqlVendaSulInput, displayMqlVendaSul);
             updateMqlDisplay(mqlLocacaoSulInput, displayMqlLocacaoSul);
+
+            // Carrega os dados quando a página é carregada
+            loadAndProcessCSV();
         });
     </script>
 </body>
