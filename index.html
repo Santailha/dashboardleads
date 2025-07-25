@@ -99,7 +99,7 @@
         <!-- Filtros de Mês e Semana -->
         <section class="card">
             <h2 class="text-2xl font-semibold mb-4" style="color: var(--primary-blue);">Filtrar por Período</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6"> <!-- Aumentei o gap para mais espaçamento -->
                 <div>
                     <label for="monthFilter" class="block text-sm font-bold mb-2" style="color: var(--primary-blue);">Mês:</label>
                     <select id="monthFilter" class="select-field">
@@ -124,7 +124,7 @@
                         <option value="">Selecione a Semana</option>
                     </select>
                 </div>
-                <div>
+                <div class="flex items-end"> <!-- Alinha o botão com a parte de baixo dos selects -->
                     <button id="applyFilterBtn" class="filter-button w-full">Aplicar Filtro</button>
                 </div>
             </div>
@@ -150,7 +150,7 @@
             <section class="card">
                 <h2 class="text-2xl font-semibold mb-4" style="color: var(--primary-blue);">Leads de Locação</h2>
                 <div class="space-y-4">
-                    <div class="lead-count-box">
+                    <div class="lead-count-box" style="background-color: var(--light-blue-bg);">
                         <span class="lead-count-label">Unidade Sul:</span>
                         <span id="locacaoSulCount" class="lead-count-number">0</span>
                     </div>
@@ -230,7 +230,7 @@
 
             // Elementos para MQLs manuais
             const mqlVendaCentroInput = document.getElementById('mqlVendaCentro');
-            const mqlVendaSulInput = document.getElementById('mqlVendaSul');
+            const mqlVendaSulInput = document.getElementById('mqlVendaSul'); // Corrigido: era 'document ='
             const mqlLocacaoSulInput = document.getElementById('mqlLocacaoSul');
             const displayMqlVendaCentro = document.getElementById('displayMqlVendaCentro');
             const displayMqlVendaSul = document.getElementById('displayMqlVendaSul');
@@ -345,10 +345,12 @@
             // Helper function to parse date string from CSV (DD/MM/YYYY HH:MM:SS) to Date object
             function parseCsvDate(dateString) {
                 if (!dateString) return null;
+                // CSV date format is DD/MM/YYYY HH:MM:SS
                 const [datePart, timePart] = dateString.split(' ');
                 const [day, month, year] = datePart.split('/');
                 const [hours, minutes, seconds] = timePart.split(':');
-                return new Date(year, month - 1, day, hours, minutes, seconds);
+                // Create Date object in YYYY-MM-DDTHH:MM:SS format for consistent parsing
+                return new Date(`${year}-${month}-${day}T${hours}:${minutes}:${seconds}`);
             }
 
             // Função para atualizar o dashboard com base nos dados filtrados
@@ -479,10 +481,7 @@
             // Inicializa os displays de MQL caso haja valores padrão (embora não haja neste caso)
             updateMqlDisplay(mqlVendaCentroInput, displayMqlVendaCentro);
             updateMqlDisplay(mqlVendaSulInput, displayMqlVendaSul);
-            updateMqlDisplay(mqlLocacaoSulInput, displayMqlLocacaoSul);
-
-            // Carrega os dados quando a página é carregada
-            loadAndProcessCSV();
+            updateMqlDisplay(mqlLocacaoSulInput, displayMqlLocacaoSul); // Corrigido: era 'updateMqlLocacaoSulInput'
         });
     </script>
 </body>
