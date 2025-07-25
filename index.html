@@ -34,6 +34,7 @@
             width: 100%;
             font-size: 1rem; /* text-base */
             color: var(--primary-blue); /* Texto do input/select com a cor azul primária */
+            height: 3rem; /* Altura explícita para consistência */
         }
         .input-field::placeholder {
             color: #888; /* Cor do placeholder */
@@ -82,6 +83,7 @@
             border-radius: 0.5rem;
             font-weight: 600;
             transition: background-color 0.2s;
+            height: 3rem; /* Altura explícita para consistência com selects/inputs */
         }
         .filter-button:hover {
             background-color: #2c266a; /* Um tom mais escuro do azul primário */
@@ -98,8 +100,8 @@
 
         <!-- Filtros de Mês e Semana -->
         <section class="card">
-            <h2 class="text-2xl font-semibold mb-4" style="color: var(--primary-blue);">Filtrar por Período</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6"> <!-- Aumentei o gap para mais espaçamento -->
+            <h2 class="text-2xl font-semibold mb-6" style="color: var(--primary-blue);">Filtrar por Período</h2> <!-- Increased mb-4 to mb-6 -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-6"> <!-- Increased gap-x and added gap-y -->
                 <div>
                     <label for="monthFilter" class="block text-sm font-bold mb-2" style="color: var(--primary-blue);">Mês:</label>
                     <select id="monthFilter" class="select-field">
@@ -230,7 +232,7 @@
 
             // Elementos para MQLs manuais
             const mqlVendaCentroInput = document.getElementById('mqlVendaCentro');
-            const mqlVendaSulInput = document.getElementById('mqlVendaSul'); // Corrigido: era 'document ='
+            const mqlVendaSulInput = document.getElementById('mqlVendaSul');
             const mqlLocacaoSulInput = document.getElementById('mqlLocacaoSul');
             const displayMqlVendaCentro = document.getElementById('displayMqlVendaCentro');
             const displayMqlVendaSul = document.getElementById('displayMqlVendaSul');
@@ -481,7 +483,7 @@
             // Inicializa os displays de MQL caso haja valores padrão (embora não haja neste caso)
             updateMqlDisplay(mqlVendaCentroInput, displayMqlVendaCentro);
             updateMqlDisplay(mqlVendaSulInput, displayMqlVendaSul);
-            updateMqlDisplay(mqlLocacaoSulInput, displayMqlLocacaoSul); // Corrigido: era 'updateMqlLocacaoSulInput'
+            updateMqlDisplay(mqlLocacaoSulInput, displayMqlLocacaoSul);
         });
     </script>
 </body>
