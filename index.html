@@ -101,8 +101,8 @@
         <!-- Filtros de Mês e Semana -->
         <section class="card">
             <h2 class="text-2xl font-semibold mb-6" style="color: var(--primary-blue);">Filtrar por Período</h2>
-            <div class="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-8"> <!-- Alterado para flexbox -->
-                <div class="flex-1"> <!-- Ocupa espaço disponível -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 items-end"> <!-- Usando grid para melhor controle -->
+                <div>
                     <label for="monthFilter" class="block text-sm font-bold mb-2" style="color: var(--primary-blue);">Mês:</label>
                     <select id="monthFilter" class="select-field">
                         <option value="">Selecione o Mês</option>
@@ -120,13 +120,13 @@
                         <option value="Dezembro">Dezembro</option>
                     </select>
                 </div>
-                <div class="flex-1"> <!-- Ocupa espaço disponível -->
+                <div>
                     <label for="weekFilter" class="block text-sm font-bold mb-2" style="color: var(--primary-blue);">Semana:</label>
                     <select id="weekFilter" class="select-field" disabled>
                         <option value="">Selecione a Semana</option>
                     </select>
                 </div>
-                <div class="sm:w-auto"> <!-- Botão se ajusta à largura em telas maiores -->
+                <div> <!-- Botão na sua própria div para alinhamento -->
                     <button id="applyFilterBtn" class="filter-button w-full">Aplicar Filtro</button>
                 </div>
             </div>
