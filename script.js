@@ -36,6 +36,7 @@ function getWeekNumber(dateString) {
         { name: 'Semana 3', start: new Date(2025, 6, 15), end: new Date(2025, 6, 21) },
         { name: 'Semana 4', start: new Date(2025, 6, 22), end: new Date(2025, 6, 28) },
         { name: 'Semana 5', start: new Date(2025, 6, 29), end: new Date(2025, 7, 4) }, // Mês 7 = Agosto
+        { name: 'Semana 1', start: new Date(2025, 7, 18), end: new Date(2025, 7, 24) }, 
         // Adicione mais semanas conforme o calendário avança
         // Ex: { name: 'Semana 6', start: new Date(2025, 7, 5), end: new Date(2025, 7, 11) },
     ];
