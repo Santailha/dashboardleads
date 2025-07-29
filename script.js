@@ -4,9 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let allLeadsData = []; // Armazena todos os dados já processados
     let charts = {}; // Objeto para armazenar as instâncias dos gráficos
 
-    // --- IMPORTANTE ---
-    // Coloque aqui o nome do arquivo que você extrai do seu CRM e envia para o GitHub.
-    // Sugestão: renomeie seu arquivo para "dados_crm.csv" para facilitar.
+    // Procura o arquivo com o nome que você definiu
     const NOME_DO_ARQUIVO_CRM = 'leads_processados.csv';
 
     // Usa PapaParse para buscar e processar o arquivo CSV
@@ -19,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // ETAPA DE PROCESSAMENTO: Transforma os dados do CRM no formato que os gráficos entendem
             const processedData = results.data.map(row => {
                 // Pula linhas que não tiverem uma data de criação
-                if (!row['Criado']) {
+                if (!row['Criado'] || row['Criado'].trim() === '') {
                     return null;
                 }
                 return {
@@ -78,7 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return acc;
         }, {});
         
-        // Ordena os dados para o gráfico
         const sortedData = Object.entries(leadsPorFonte).sort(([,a],[,b]) => b-a);
 
         charts.leadsPorFonte = new Chart(ctx, {
@@ -134,12 +131,52 @@ document.addEventListener('DOMContentLoaded', () => {
         // Função para converter data do formato "dd/mm/aaaa HH:MM:SS" para um objeto Date
         const parseDate = (dateString) => {
             const [datePart, timePart] = dateString.split(' ');
+            if (!datePart || !timePart) return null;
             const [day, month, year] = datePart.split('/');
-            return new Date(`${year}-${month}-${day}T${timePart}`);
+            if (!day || !month || !year) return null;
+            return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${timePart}`);
         };
         
-        // Função para obter o número da semana do ano a partir de uma data
         const getWeekNumber = (d) => {
             d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
             d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        }
+
+        const leadsPorSemana = data.reduce((acc, curr) => {
+            const date = parseDate(curr.data);
+            if (!date || isNaN(date)) return acc;
+            const year = date.getFullYear();
+            const week = `Semana ${getWeekNumber(date)}/${year}`;
+            acc[week] = (acc[week] || 0) + curr.quantidade;
+            return acc;
+        }, {});
+        
+        const sortedWeeks = Object.keys(leadsPorSemana).sort((a, b) => {
+            const [weekA, yearA] = a.replace('Semana ', '').split('/');
+            const [weekB, yearB] = b.replace('Semana ', '').split('/');
+            if (yearA !== yearB) return yearA - yearB;
+            return parseInt(weekA) - parseInt(weekB);
+        });
+        
+        const sortedData = sortedWeeks.map(week => leadsPorSemana[week]);
+
+        charts.leadsPorSemana = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: sortedWeeks,
+                datasets: [{
+                    label: 'Total de Leads',
+                    data: sortedData,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    tension: 0.1,
+                    fill: false
+                }]
+            },
+            options: {
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+});
