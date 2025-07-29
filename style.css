@@ -140,3 +140,9 @@ main {
     font-weight: bold;
     background-color: #e8e8e8;
 }
+
+#logo {
+    max-width: 250px; /* Você pode ajustar este valor se quiser maior ou menor */
+    height: auto;
+    margin-top: 15px; /* Cria um espaço entre o título e a logo */
+}
