@@ -22,8 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     const motivosDescarteLead = ['Atendimento Duplicado', 'Cadastro Duplicado', 'Contato Não Comercial'];
     const tiposNegociacaoExcluidos = ['não comercial'];
-    const faseNaoMqlVendas = 'Oportunidade';
-    const faseNaoMqlLocacao = 'Atendimento';
+    const mqlDateColumnVendas = 'Fase Atendimento do Lead - Vendas';
+    const mqlDateColumnLocacao = 'Data e Hora de entrada na fase Confirmação de visita loc.';
 
     // === INICIALIZAÇÃO ===
     Chart.register(ChartDataLabels);
@@ -61,18 +61,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 : tipoNegociacao;
 
             return {
-                date: parseDate(row['Criado']),
                 leadDate: parseDate(row['Criado']),
                 fonte: row['Fonte'] || 'Não Informada',
                 unidade: unidade,
-                quantidade: 1 // <-- A PROPRIEDADE QUE FALTAVA FOI ADICIONADA AQUI
+                quantidade: 1
             };
         }).filter(Boolean);
 
         const mqlsVendas = dealsVendasData.map(row => {
-            if (row['Fase'] === faseNaoMqlVendas) return null;
+            if (!row[mqlDateColumnVendas]) return null;
             let unidade = bairrosCampeche.includes(row['Bairros (LS)']) ? 'MQL Vendas - Campeche' : 'MQL Vendas - Centro';
             return {
+                mqlDate: parseDate(row[mqlDateColumnVendas]),
                 leadDate: parseDate(row['Data e hora da criação do Lead']),
                 fonte: row['Fonte'] || 'Não Informada',
                 unidade: unidade
@@ -80,8 +80,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }).filter(Boolean);
 
         const mqlsLocacao = dealsLocacaoData.map(row => {
-            if (row['Fase'] === faseNaoMqlLocacao) return null;
+            if (!row[mqlDateColumnLocacao]) return null;
             return {
+                mqlDate: parseDate(row[mqlDateColumnLocacao]),
                 leadDate: parseDate(row['Data e hora da criação do Lead']),
                 fonte: row['Fonte'] || 'Não Informada',
                 unidade: 'MQL Locação'
@@ -98,13 +99,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function applyFilters() {
         const selectedUnidade = unidadeFilter.value;
-        const startDate = startDateInput.valueAsDate ? new Date(startDateInput.value + 'T00:00:00') : null;
-        const endDate = endDateInput.valueAsDate ? new Date(endDateInput.value + 'T23:59:59') : null;
+        const startDate = startDateInput.value ? new Date(startDateInput.value + 'T00:00:00') : null;
+        const endDate = endDateInput.value ? new Date(endDateInput.value + 'T23:59:59') : null;
 
         let filteredLeads = allLeads.filter(lead => {
-            if (!lead.date) return false;
-            if (startDate && lead.date < startDate) return false;
-            if (endDate && lead.date > endDate) return false;
+            if (!lead.leadDate) return false;
+            if (startDate && lead.leadDate < startDate) return false;
+            if (endDate && lead.leadDate > endDate) return false;
             if (selectedUnidade !== 'todas' && lead.unidade !== selectedUnidade) return false;
             return true;
         });
@@ -167,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const leadsPorFonte = leadsDaUnidade.reduce((acc, curr) => { acc[curr.fonte] = (acc[curr.fonte] || 0) + 1; return acc; }, {});
             const mqlsPorFonte = mqlsDaUnidade.reduce((acc, curr) => { acc[curr.fonte] = (acc[curr.fonte] || 0) + 1; return acc; }, {});
             
-            const fontes = [...new Set([...Object.keys(leadsPorFonte), ...Object.keys(mqlsPorFonte)])].sort();
+            const fontes = [...new Set([...Object.keys(leadsPorFonte), ...Object.keys(mqlsPorFonte)])].sort((a,b) => (leadsPorFonte[b]||0) - (leadsPorFonte[a]||0));
 
             let tableHTML = `<table class="summary-table"><thead><tr><th>Fonte</th><th>Leads</th><th>MQLs</th><th>Conv.</th></tr></thead><tbody>`;
             fontes.forEach(fonte => {
