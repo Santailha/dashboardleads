@@ -24,6 +24,7 @@ header h1 {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .filtros label {
@@ -31,7 +32,7 @@ header h1 {
     font-weight: bold;
 }
 
-.filtros select {
+.filtros select, .filtros input {
     padding: 8px;
     border-radius: 5px;
     border: 1px solid #ccc;
@@ -55,4 +56,29 @@ header h1 {
     margin-top: 0;
     font-size: 1.2em;
     color: #34495e;
+}
+
+/* Estilos para os novos filtros */
+.filtro-item {
+    display: flex;
+    flex-direction: column;
+    margin: 5px 15px;
+}
+
+.filtro-item label {
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+.filtro-item button {
+    padding: 8px 16px;
+    border: none;
+    background-color: #3498db;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    align-self: flex-end; /* Alinha o botão com a base dos inputs */
+    margin-top: 15px;
+}
+.filtro-item button:hover {
+    background-color: #2980b9;
 }
