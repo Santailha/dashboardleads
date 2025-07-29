@@ -19,6 +19,13 @@ document.addEventListener('DOMContentLoaded', () => {
         'Rio Tavares', 'Tapera', 'Saco dos Limões'
     ];
 
+    // NOVA REGRA: Motivos para descartar um lead
+    const motivosParaDescarte = [
+        'Atendimento Duplicado',
+        'Cadastro Duplicado',
+        'Contato Não Comercial'
+    ];
+
     // Usa PapaParse para buscar e processar o arquivo CSV
     Papa.parse(NOME_DO_ARQUIVO_CRM, {
         download: true,
@@ -27,7 +34,13 @@ document.addEventListener('DOMContentLoaded', () => {
         complete: function(results) {
             // ETAPA DE PROCESSAMENTO: Transforma os dados do CRM
             const processedData = results.data.map(row => {
+                // REGRA 1: Pula a linha se não tiver data de criação
                 if (!row['Criado'] || row['Criado'].trim() === '') {
+                    return null;
+                }
+
+                // REGRA 2 (NOVA): Pula a linha se o motivo de descarte for um dos listados
+                if (motivosParaDescarte.includes(row['Motivo de Descarte'])) {
                     return null;
                 }
 
@@ -51,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     bairro: row['Bairro Principal'] || 'Não Informado',
                     quantidade: 1
                 };
-            }).filter(row => row !== null);
+            }).filter(row => row !== null); // Remove todas as linhas marcadas como nulas
 
             allLeadsData = processedData;
             populateFilter(allLeadsData);
