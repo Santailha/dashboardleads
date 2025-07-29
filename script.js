@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let charts = {}; // Objeto para armazenar as instâncias dos gráficos
 
     // Usa PapaParse para buscar e processar o arquivo CSV
-    Papa.parse('dados.csv', {
+    Papa.parse('leads_processados.csv', {
         download: true,
         header: true,
         dynamicTyping: true,
