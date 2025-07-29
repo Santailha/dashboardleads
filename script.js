@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const startDateInput = document.getElementById('start-date');
     const endDateInput = document.getElementById('end-date');
     const filterButton = document.getElementById('filter-button');
+    const tablesContainer = document.getElementById('tables-container');
 
     let allLeadsData = []; // Armazena todos os dados já processados
     let charts = {}; // Objeto para armazenar as instâncias dos gráficos
@@ -24,10 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
         'Contato Não Comercial'
     ];
     
-    // Tipos de Negociação que não devem ser considerados leads (em minúsculas para comparação)
     const tiposDeNegociacaoExcluidos = ['não comercial'];
 
-    // Configuração global para o plugin de datalabels
     Chart.register(ChartDataLabels);
     Chart.defaults.set('plugins.datalabels', {
         color: '#444',
@@ -43,26 +42,16 @@ document.addEventListener('DOMContentLoaded', () => {
         complete: function(results) {
             const processedData = results.data.map(row => {
                 const tipoNegociacao = row['Tipo de Negociação'];
-
-                // REGRAS DE EXCLUSÃO
                 if (!row['Criado'] || row['Criado'].trim() === '') return null;
                 if (motivosParaDescarte.includes(row['Motivo de Descarte'])) return null;
-                
-                // CORREÇÃO: Padroniza o texto antes de verificar se deve ser excluído
-                if (!tipoNegociacao || tiposDeNegociacaoExcluidos.includes(tipoNegociacao.trim().toLowerCase())) {
-                    return null;
-                }
-
+                if (!tipoNegociacao || tiposDeNegociacaoExcluidos.includes(tipoNegociacao.trim().toLowerCase())) return null;
                 let unidade;
-                // LÓGICA DE DEFINIÇÃO DE UNIDADE
                 if (tipoNegociacao === 'Compradores') {
                     const bairro = row['Bairro Principal'];
                     unidade = bairrosCampeche.includes(bairro) ? 'Vendas - Campeche' : 'Vendas - Centro';
                 } else {
-                    // Mantém outros tipos válidos, como "Locatários"
                     unidade = tipoNegociacao;
                 }
-
                 return {
                     data: row['Criado'],
                     fonte: row['Fonte'] || 'Não Informada',
@@ -71,7 +60,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     quantidade: 1
                 };
             }).filter(row => row !== null);
-
             allLeadsData = processedData;
             populateFilter(allLeadsData);
             updateDashboard(allLeadsData);
@@ -123,6 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.values(charts).forEach(chart => chart.destroy());
         createLeadsPorFonteChart(data);
         createLeadsPorUnidadeChart(data);
+        createSummaryTables(data); // <-- Chamada para a nova função das tabelas
     }
 
     function createLeadsPorFonteChart(data) {
@@ -189,6 +178,60 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
+        });
+    }
+
+    // NOVA FUNÇÃO PARA CRIAR AS TABELAS DE RESUMO
+    function createSummaryTables(data) {
+        tablesContainer.innerHTML = ''; // Limpa as tabelas antigas
+        const unidades = [...new Set(data.map(item => item.unidade))].sort();
+
+        unidades.forEach(unidade => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'table-wrapper';
+
+            const title = document.createElement('h3');
+            title.textContent = unidade;
+
+            const dataDaUnidade = data.filter(d => d.unidade === unidade);
+            const totalGeral = dataDaUnidade.length;
+
+            const leadsPorFonte = dataDaUnidade.reduce((acc, curr) => {
+                acc[curr.fonte] = (acc[curr.fonte] || 0) + 1;
+                return acc;
+            }, {});
+            
+            const sortedLeads = Object.entries(leadsPorFonte).sort(([,a],[,b]) => b-a);
+
+            let tableHTML = `
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>Fonte</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            sortedLeads.forEach(([fonte, total]) => {
+                tableHTML += `<tr><td>${fonte}</td><td>${total}</td></tr>`;
+            });
+
+            tableHTML += `
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td>Total geral</td>
+                            <td>${totalGeral}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            `;
+
+            wrapper.appendChild(title);
+            wrapper.innerHTML += tableHTML;
+            tablesContainer.appendChild(wrapper);
         });
     }
 });
