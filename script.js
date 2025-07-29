@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'Rio Tavares', 'Tapera', 'Saco dos Limões'
     ];
 
-    // NOVA REGRA: Motivos para descartar um lead
+    // REGRAS: Motivos para descartar um lead
     const motivosParaDescarte = [
         'Atendimento Duplicado',
         'Cadastro Duplicado',
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return null;
                 }
 
-                // REGRA 2 (NOVA): Pula a linha se o motivo de descarte for um dos listados
+                // REGRA 2: Pula a linha se o motivo de descarte for um dos listados
                 if (motivosParaDescarte.includes(row['Motivo de Descarte'])) {
                     return null;
                 }
@@ -77,6 +77,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Também permite filtrar ao mudar a unidade no dropdown
     unidadeFilter.addEventListener('change', applyFilters);
 
+    // Função que converte a data do CSV. Necessária para o filtro de data.
+    const parseDate = (dateString) => {
+        if (!dateString || typeof dateString !== 'string') return null;
+        const parts = dateString.split(' ');
+        if (parts.length < 2) return null;
+        const [datePart, timePart] = parts;
+        const [day, month, year] = datePart.split('/');
+        if (!day || !month || !year || year.length < 4) return null;
+        return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${timePart}`);
+    };
+    
     // Função central que aplica TODOS os filtros
     function applyFilters() {
         const selectedUnidade = unidadeFilter.value;
@@ -116,7 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.values(charts).forEach(chart => chart.destroy());
         createLeadsPorFonteChart(data);
         createLeadsPorUnidadeChart(data);
-        createLeadsPorSemanaChart(data);
     }
 
     function createLeadsPorFonteChart(data) {
@@ -160,54 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     ],
                 }]
             }
-        });
-    }
-
-    const parseDate = (dateString) => {
-        if (!dateString || typeof dateString !== 'string') return null;
-        const parts = dateString.split(' ');
-        if (parts.length < 2) return null;
-        const [datePart, timePart] = parts;
-        const [day, month, year] = datePart.split('/');
-        if (!day || !month || !year || year.length < 4) return null;
-        return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${timePart}`);
-    };
-
-    function createLeadsPorSemanaChart(data) {
-        const ctx = document.getElementById('leadsPorSemanaChart').getContext('2d');
-        const getWeekNumber = (d) => {
-            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-        }
-        const leadsPorSemana = data.reduce((acc, curr) => {
-            const date = parseDate(curr.data);
-            if (!date || isNaN(date.getTime())) return acc;
-            const year = date.getFullYear();
-            const week = `Semana ${getWeekNumber(date)}/${year}`;
-            acc[week] = (acc[week] || 0) + curr.quantidade;
-            return acc;
-        }, {});
-        const sortedWeeks = Object.keys(leadsPorSemana).sort((a, b) => {
-            const [weekA, yearA] = a.replace('Semana ', '').split('/');
-            const [weekB, yearB] = b.replace('Semana ', '').split('/');
-            if (yearA !== yearB) return yearA - yearB;
-            return parseInt(weekA) - parseInt(weekB);
-        });
-        const sortedData = sortedWeeks.map(week => leadsPorSemana[week]);
-        charts.leadsPorSemana = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: sortedWeeks,
-                datasets: [{
-                    label: 'Total de Leads',
-                    data: sortedData,
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    tension: 0.1,
-                }]
-            },
-            options: { scales: { y: { beginAtZero: true } } }
         });
     }
 });
