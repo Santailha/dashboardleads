@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const NOME_DO_ARQUIVO_CRM = 'leads_processados.csv';
 
-    // LISTA DE BAIRROS ATUALIZADA
     const bairrosCampeche = [
         'Campeche', 'Morro das Pedras', 'Ribeirao da Ilha', 'Armação',
         'Açores', 'Barra da Lagoa', 'Carianos', 'Costeira do Pirajubaé',
@@ -19,44 +18,36 @@ document.addEventListener('DOMContentLoaded', () => {
         'Rio Tavares', 'Tapera', 'Saco dos Limões'
     ];
 
-    // REGRAS: Motivos para descartar um lead
     const motivosParaDescarte = [
         'Atendimento Duplicado',
         'Cadastro Duplicado',
         'Contato Não Comercial'
     ];
+    
+    // Configuração global para o plugin de datalabels
+    Chart.register(ChartDataLabels);
+    Chart.defaults.set('plugins.datalabels', {
+        color: '#444',
+        font: {
+            weight: 'bold'
+        }
+    });
 
-    // Usa PapaParse para buscar e processar o arquivo CSV
     Papa.parse(NOME_DO_ARQUIVO_CRM, {
         download: true,
         header: true,
         skipEmptyLines: true,
         complete: function(results) {
-            // ETAPA DE PROCESSAMENTO: Transforma os dados do CRM
             const processedData = results.data.map(row => {
-                // REGRA 1: Pula a linha se não tiver data de criação
-                if (!row['Criado'] || row['Criado'].trim() === '') {
-                    return null;
-                }
-
-                // REGRA 2: Pula a linha se o motivo de descarte for um dos listados
-                if (motivosParaDescarte.includes(row['Motivo de Descarte'])) {
-                    return null;
-                }
-
+                if (!row['Criado'] || row['Criado'].trim() === '') return null;
+                if (motivosParaDescarte.includes(row['Motivo de Descarte'])) return null;
                 let unidade;
-                // LÓGICA DE SUBDIVISÃO DE UNIDADE
                 if (row['Tipo de Negociação'] === 'Compradores') {
                     const bairro = row['Bairro Principal'];
-                    if (bairrosCampeche.includes(bairro)) {
-                        unidade = 'Vendas - Campeche';
-                    } else {
-                        unidade = 'Vendas - Centro';
-                    }
+                    unidade = bairrosCampeche.includes(bairro) ? 'Vendas - Campeche' : 'Vendas - Centro';
                 } else {
                     unidade = row['Tipo de Negociação'] || 'Não Informada';
                 }
-
                 return {
                     data: row['Criado'],
                     fonte: row['Fonte'] || 'Não Informada',
@@ -64,20 +55,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     bairro: row['Bairro Principal'] || 'Não Informado',
                     quantidade: 1
                 };
-            }).filter(row => row !== null); // Remove todas as linhas marcadas como nulas
-
+            }).filter(row => row !== null);
             allLeadsData = processedData;
             populateFilter(allLeadsData);
-            updateDashboard(allLeadsData); // Carga inicial com todos os dados
+            updateDashboard(allLeadsData);
         }
     });
     
-    // Adiciona o evento de clique ao botão de filtro
     filterButton.addEventListener('click', applyFilters);
-    // Também permite filtrar ao mudar a unidade no dropdown
     unidadeFilter.addEventListener('change', applyFilters);
 
-    // Função que converte a data do CSV. Necessária para o filtro de data.
     const parseDate = (dateString) => {
         if (!dateString || typeof dateString !== 'string') return null;
         const parts = dateString.split(' ');
@@ -88,27 +75,20 @@ document.addEventListener('DOMContentLoaded', () => {
         return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${timePart}`);
     };
     
-    // Função central que aplica TODOS os filtros
     function applyFilters() {
         const selectedUnidade = unidadeFilter.value;
         const startDate = startDateInput.value ? new Date(startDateInput.value + 'T00:00:00') : null;
         const endDate = endDateInput.value ? new Date(endDateInput.value + 'T23:59:59') : null;
-
         let filteredData = allLeadsData;
-
-        // 1. Aplica filtro de Unidade
         if (selectedUnidade !== 'todas') {
             filteredData = filteredData.filter(row => row.unidade === selectedUnidade);
         }
-
-        // 2. Aplica filtro de Data
         if (startDate && endDate) {
             filteredData = filteredData.filter(row => {
                 const rowDate = parseDate(row.data);
                 return rowDate && rowDate >= startDate && rowDate <= endDate;
             });
         }
-        
         updateDashboard(filteredData);
     }
 
@@ -146,7 +126,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     backgroundColor: 'rgba(54, 162, 235, 0.6)',
                 }]
             },
-            options: { scales: { y: { beginAtZero: true } }, indexAxis: 'y' }
+            options: {
+                scales: { x: { ticks: { precision: 0 } } },
+                indexAxis: 'y',
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'end',
+                        formatter: (value) => value > 0 ? value : '', // Mostra o valor, exceto se for 0
+                    }
+                }
+            }
         });
     }
 
@@ -169,6 +160,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         'rgba(153, 102, 255, 0.6)'
                     ],
                 }]
+            },
+            options: {
+                plugins: {
+                    // Exibe a porcentagem no gráfico de pizza
+                    datalabels: {
+                        formatter: (value, ctx) => {
+                            let sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                            let percentage = (value * 100 / sum).toFixed(1) + "%";
+                            return percentage;
+                        },
+                        color: '#fff',
+                    }
+                }
             }
         });
     }
