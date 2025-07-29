@@ -1,6 +1,6 @@
 // main.js
 
-const GOOGLE_SHEET_CSV_URL = 'SUA_URL_PUBLICADA_DO_GOOGLE_SHEETS_AQUI'; // Substitua pelo seu URL real!
+const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQFdqk65-E3D_pKp4-G2xn9mxE_zULv9CyStMINEw40j9O71M5zke3-Bd5wphvDS3CqwdpnyV2B8-yE/pubhtml'; // Substitua pelo seu URL real!
 
 // Função para converter CSV para array de objetos JavaScript
 async function parseCsv(csvText) {
