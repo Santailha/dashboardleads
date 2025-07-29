@@ -1,44 +1,58 @@
 // Aguarda o carregamento completo da página
 document.addEventListener('DOMContentLoaded', () => {
-    // Mapeamento dos elementos do HTML
+    // === LÓGICA DO MODO ESCURO ===
+    const themeToggle = document.getElementById('theme-toggle');
+
+    // Função para aplicar o tema (claro ou escuro)
+    const applyTheme = (isDark) => {
+        if (isDark) {
+            document.body.classList.add('dark-mode');
+            themeToggle.checked = true;
+        } else {
+            document.body.classList.remove('dark-mode');
+            themeToggle.checked = false;
+        }
+        // Redesenha os gráficos com as cores do novo tema
+        if (allLeadsData.length > 0) {
+            applyFilters();
+        }
+    };
+
+    // Verifica a preferência salva no navegador
+    const savedTheme = localStorage.getItem('theme');
+    applyTheme(savedTheme === 'dark');
+
+    // Evento para o clique no interruptor
+    themeToggle.addEventListener('change', () => {
+        const isDarkMode = themeToggle.checked;
+        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        applyTheme(isDarkMode);
+    });
+
+    // === LÓGICA DO DASHBOARD ===
     const unidadeFilter = document.getElementById('unidade-filter');
     const startDateInput = document.getElementById('start-date');
     const endDateInput = document.getElementById('end-date');
     const filterButton = document.getElementById('filter-button');
     const tablesContainer = document.getElementById('tables-container');
 
-    let allLeadsData = []; // Armazena todos os dados já processados
-    let charts = {}; // Objeto para armazenar as instâncias dos gráficos
+    let allLeadsData = [];
+    let charts = {};
 
     const NOME_DO_ARQUIVO_CRM = 'leads_processados.csv';
-
     const bairrosCampeche = [
-        'Campeche', 'Morro das Pedras', 'Ribeirao da Ilha', 'Armação',
-        'Açores', 'Barra da Lagoa', 'Carianos', 'Costeira do Pirajubaé',
-        'Lagoa da Conceição', 'Novo Campeche', 'Praia Mole', 'Pântano do Sul',
-        'Rio Tavares', 'Tapera', 'Saco dos Limões'
+        'Campeche', 'Morro das Pedras', 'Ribeirao da Ilha', 'Armação', 'Açores', 
+        'Barra da Lagoa', 'Carianos', 'Costeira do Pirajubaé', 'Lagoa da Conceição', 
+        'Novo Campeche', 'Praia Mole', 'Pântano do Sul', 'Rio Tavares', 'Tapera', 'Saco dos Limões'
     ];
-
-    const motivosParaDescarte = [
-        'Atendimento Duplicado',
-        'Cadastro Duplicado',
-        'Contato Não Comercial'
-    ];
-    
+    const motivosParaDescarte = ['Atendimento Duplicado', 'Cadastro Duplicado', 'Contato Não Comercial'];
     const tiposDeNegociacaoExcluidos = ['não comercial'];
 
     Chart.register(ChartDataLabels);
-    Chart.defaults.set('plugins.datalabels', {
-        color: '#444',
-        font: {
-            weight: 'bold'
-        }
-    });
+    Chart.defaults.set('plugins.datalabels', { color: '#444', font: { weight: 'bold' } });
 
     Papa.parse(NOME_DO_ARQUIVO_CRM, {
-        download: true,
-        header: true,
-        skipEmptyLines: true,
+        download: true, header: true, skipEmptyLines: true,
         complete: function(results) {
             const processedData = results.data.map(row => {
                 const tipoNegociacao = row['Tipo de Negociação'];
@@ -53,16 +67,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     unidade = tipoNegociacao;
                 }
                 return {
-                    data: row['Criado'],
-                    fonte: row['Fonte'] || 'Não Informada',
-                    unidade: unidade,
-                    bairro: row['Bairro Principal'] || 'Não Informado',
-                    quantidade: 1
+                    data: row['Criado'], fonte: row['Fonte'] || 'Não Informada', unidade: unidade,
+                    bairro: row['Bairro Principal'] || 'Não Informado', quantidade: 1
                 };
             }).filter(row => row !== null);
             allLeadsData = processedData;
             populateFilter(allLeadsData);
-            updateDashboard(allLeadsData);
+            applyFilters(); // Usa applyFilters para a carga inicial
         }
     });
     
@@ -97,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function populateFilter(data) {
+        const currentVal = unidadeFilter.value;
         unidadeFilter.innerHTML = '<option value="todas">Todas as Unidades</option>';
         const unidades = [...new Set(data.map(item => item.unidade))];
         unidades.sort().forEach(unidade => {
@@ -105,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
             option.textContent = unidade;
             unidadeFilter.appendChild(option);
         });
+        unidadeFilter.value = currentVal;
     }
 
     function updateDashboard(data) {
@@ -114,73 +127,71 @@ document.addEventListener('DOMContentLoaded', () => {
         createSummaryTables(data);
     }
 
+    function getChartOptions() {
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+        const textColor = isDarkMode ? '#e0e0e0' : '#333';
+        return {
+            scales: {
+                x: {
+                    ticks: { color: textColor, precision: 0 },
+                    grid: { color: gridColor }
+                },
+                y: {
+                    ticks: { color: textColor },
+                    grid: { color: gridColor }
+                }
+            }
+        };
+    }
+
     function createLeadsPorFonteChart(data) {
         const ctx = document.getElementById('leadsPorFonteChart').getContext('2d');
         const leadsPorFonte = data.reduce((acc, curr) => {
-            acc[curr.fonte] = (acc[curr.fonte] || 0) + curr.quantidade;
-            return acc;
-        }, {});
+            acc[curr.fonte] = (acc[curr.fonte] || 0) + curr.quantidade; return acc; }, {});
         const sortedData = Object.entries(leadsPorFonte).sort(([,a],[,b]) => b-a);
+        const chartOptions = getChartOptions();
         charts.leadsPorFonte = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: sortedData.map(item => item[0]),
                 datasets: [{
-                    label: 'Total de Leads',
-                    data: sortedData.map(item => item[1]),
-                    backgroundColor: '#3d357e99', // COR DA MARCA (azul com transparência)
+                    label: 'Total de Leads', data: sortedData.map(item => item[1]),
+                    backgroundColor: document.body.classList.contains('dark-mode') ? '#a7a2e4' : '#3d357e',
                 }]
             },
-            options: {
-                scales: { x: { ticks: { precision: 0 } } },
-                indexAxis: 'y',
-                plugins: {
-                    legend: { display: false },
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'end',
-                        formatter: (value) => value > 0 ? value : '',
-                    }
-                }
-            }
+            options: { ...chartOptions, indexAxis: 'y', plugins: {
+                legend: { display: false },
+                datalabels: { anchor: 'end', align: 'end', formatter: (value) => value > 0 ? value : '' }
+            }}
         });
     }
 
     function createLeadsPorUnidadeChart(data) {
         const ctx = document.getElementById('leadsPorUnidadeChart').getContext('2d');
         const leadsPorUnidade = data.reduce((acc, curr) => {
-            acc[curr.unidade] = (acc[curr.unidade] || 0) + curr.quantidade;
-            return acc;
-        }, {});
+            acc[curr.unidade] = (acc[curr.unidade] || 0) + curr.quantidade; return acc; }, {});
+        const chartOptions = getChartOptions();
         charts.leadsPorUnidade = new Chart(ctx, {
             type: 'pie',
             data: {
                 labels: Object.keys(leadsPorUnidade),
                 datasets: [{
-                    label: 'Total de Leads',
-                    data: Object.values(leadsPorUnidade),
-                    backgroundColor: [ // PALETA DE CORES DA MARCA
-                        '#3d357e', // Azul
-                        '#edae0f', // Amarelo
-                        '#7c75b8', // Azul claro
-                        '#f2c75a', // Amarelo claro
-                        '#cccccc'  // Cinza
-                    ],
+                    label: 'Total de Leads', data: Object.values(leadsPorUnidade),
+                    backgroundColor: ['#3d357e', '#edae0f', '#7c75b8', '#f2c75a', '#cccccc'],
                 }]
             },
             options: {
+                ...chartOptions.scales.y, // Apenas para cor do texto da legenda
                 plugins: {
+                    legend: { labels: { color: chartOptions.scales.y.ticks.color } },
                     datalabels: {
                         formatter: (value, ctx) => {
                             let sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
                             let percentage = (value * 100 / sum).toFixed(1) + "%";
                             return percentage;
                         },
-                        color: '#fff',
-                        font: {
-                            weight: 'bold',
-                            size: 14
-                        }
+                        color: '#fff', font: { weight: 'bold', size: 14 }
                     }
                 }
             }
@@ -198,9 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const dataDaUnidade = data.filter(d => d.unidade === unidade);
             const totalGeral = dataDaUnidade.length;
             const leadsPorFonte = dataDaUnidade.reduce((acc, curr) => {
-                acc[curr.fonte] = (acc[curr.fonte] || 0) + 1;
-                return acc;
-            }, {});
+                acc[curr.fonte] = (acc[curr.fonte] || 0) + 1; return acc; }, {});
             const sortedLeads = Object.entries(leadsPorFonte).sort(([,a],[,b]) => b-a);
             let tableHTML = `<table class="summary-table"><thead><tr><th>Fonte</th><th>Total</th></tr></thead><tbody>`;
             sortedLeads.forEach(([fonte, total]) => {
