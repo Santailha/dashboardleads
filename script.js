@@ -1,210 +1,147 @@
-// main.js
+// Aguarda o carregamento completo da página
+document.addEventListener('DOMContentLoaded', () => {
+    const unidadeFilter = document.getElementById('unidade-filter');
+    let allLeadsData = []; // Armazena todos os dados do CSV
+    let charts = {}; // Objeto para armazenar as instâncias dos gráficos
 
-const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQFdqk65-E3D_pKp4-G2xn9mxE_zULv9CyStMINEw40j9O71M5zke3-Bd5wphvDS3CqwdpnyV2B8-yE/pubhtml'; // Substitua pelo seu URL real!
-
-// Função para converter CSV para array de objetos JavaScript
-async function parseCsv(csvText) {
-    const lines = csvText.split('\n');
-    const headers = lines[0].split(',').map(header => header.trim()); // Remove espaços em branco
-    const data = [];
-
-    for (let i = 1; i < lines.length; i++) {
-        const currentLine = lines[i].trim();
-        if (currentLine === '') continue; // Ignora linhas vazias
-
-        const values = currentLine.split(',');
-        const row = {};
-        for (let j = 0; j < headers.length; j++) {
-            row[headers[j]] = values[j] ? values[j].trim() : ''; // Trata valores vazios
+    // Usa PapaParse para buscar e processar o arquivo CSV
+    Papa.parse('dados.csv', {
+        download: true,
+        header: true,
+        dynamicTyping: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+            allLeadsData = results.data;
+            populateFilter(allLeadsData);
+            updateDashboard(allLeadsData);
         }
-        data.push(row);
-    }
-    return data;
-}
+    });
 
-// Função para determinar a semana de análise
-function getWeekNumber(dateString) {
-    // A string de data vem no formato "DD/MM/AAAA HH:MM:SS"
-    const [datePart] = dateString.split(' ');
-    const [day, month, year] = datePart.split('/').map(Number);
-    const date = new Date(year, month - 1, day); // month - 1 porque o mês em JS é 0-indexed
-
-    // Definições das semanas para Julho de 2025
-    const weeks = [
-        { name: 'Semana 1', start: new Date(2025, 6, 1), end: new Date(2025, 6, 7) }, // Mês 6 = Julho
-        { name: 'Semana 2', start: new Date(2025, 6, 8), end: new Date(2025, 6, 14) },
-        { name: 'Semana 3', start: new Date(2025, 6, 15), end: new Date(2025, 6, 21) },
-        { name: 'Semana 4', start: new Date(2025, 6, 22), end: new Date(2025, 6, 28) },
-        { name: 'Semana 5', start: new Date(2025, 6, 29), end: new Date(2025, 7, 4) }, // Mês 7 = Agosto
-        { name: 'Semana 1', start: new Date(2025, 7, 18), end: new Date(2025, 7, 24) }, 
-        // Adicione mais semanas conforme o calendário avança
-        // Ex: { name: 'Semana 6', start: new Date(2025, 7, 5), end: new Date(2025, 7, 11) },
-    ];
-
-    for (const week of weeks) {
-        // Ajusta as horas para garantir que o dia inteiro seja incluído
-        week.start.setHours(0, 0, 0, 0);
-        week.end.setHours(23, 59, 59, 999);
-
-        if (date >= week.start && date <= week.end) {
-            return week.name;
+    // Adiciona um "ouvinte" para o filtro de unidade
+    unidadeFilter.addEventListener('change', () => {
+        const selectedUnidade = unidadeFilter.value;
+        let filteredData = allLeadsData;
+        if (selectedUnidade !== 'todas') {
+            filteredData = allLeadsData.filter(row => row.unidade === selectedUnidade);
         }
+        updateDashboard(filteredData);
+    });
+
+    // Função para preencher o seletor de filtro com as unidades disponíveis
+    function populateFilter(data) {
+        const unidades = [...new Set(data.map(item => item.unidade))];
+        unidades.forEach(unidade => {
+            const option = document.createElement('option');
+            option.value = unidade;
+            option.textContent = unidade;
+            unidadeFilter.appendChild(option);
+        });
     }
-    return 'Semana Não Definida'; // Para datas fora das semanas especificadas
-}
 
-// Função principal para carregar e processar dados
-async function loadAndProcessData() {
-    try {
-        const response = await fetch(GOOGLE_SHEET_CSV_URL);
-        const csvText = await response.text();
-        const rawData = await parseCsv(csvText);
+    // Função principal que atualiza todos os gráficos
+    function updateDashboard(data) {
+        // Destrói gráficos antigos antes de desenhar novos para evitar sobreposição
+        Object.values(charts).forEach(chart => chart.destroy());
 
-        // Filtrar e processar apenas leads válidos ou relevantes
-        const leads = rawData.filter(lead => lead['Criado'] && lead['Tipo de Negócio Detalhado']);
+        createLeadsPorFonteChart(data);
+        createLeadsPorUnidadeChart(data);
+        createLeadsPorSemanaChart(data);
+    }
 
-        // Mapear e adicionar a semana de análise para cada lead
-        const processedLeads = leads.map(lead => ({
-            ...lead,
-            // Certifique-se de que 'Criado' é o nome exato da coluna da data no seu CSV
-            week: getWeekNumber(lead['Criado'])
-        }));
+    // Função para criar o gráfico de Leads por Fonte
+    function createLeadsPorFonteChart(data) {
+        const ctx = document.getElementById('leadsPorFonteChart').getContext('2d');
+        const leadsPorFonte = data.reduce((acc, curr) => {
+            acc[curr.fonte] = (acc[curr.fonte] || 0) + curr.quantidade;
+            return acc;
+        }, {});
 
-        // Exemplo de como agrupar dados para gráficos:
-        const leadsByDetailedType = {};
-        const leadsByWeek = {};
-        const leadsBySource = {};
-
-        processedLeads.forEach(lead => {
-            // Agrupar por "Tipo de Negócio Detalhado"
-            if (lead['Tipo de Negócio Detalhado']) {
-                leadsByDetailedType[lead['Tipo de Negócio Detalhado']] = (leadsByDetailedType[lead['Tipo de Negócio Detalhado']] || 0) + 1;
-            }
-
-            // Agrupar por Semana
-            if (lead.week && lead.week !== 'Semana Não Definida') {
-                leadsByWeek[lead.week] = (leadsByWeek[lead.week] || 0) + 1;
-            }
-
-            // Agrupar por Fonte (certifique-se de que 'Fonte' é o nome exato da coluna)
-            if (lead['Fonte']) {
-                leadsBySource[lead['Fonte']] = (leadsBySource[lead['Fonte']] || 0) + 1;
+        charts.leadsPorFonte = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(leadsPorFonte),
+                datasets: [{
+                    label: 'Total de Leads',
+                    data: Object.values(leadsPorFonte),
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: { y: { beginAtZero: true } },
+                indexAxis: 'y', // Deixa as barras na horizontal para melhor leitura
             }
         });
-
-        console.log('Leads por Tipo de Negócio Detalhado:', leadsByDetailedType);
-        console.log('Leads por Semana:', leadsByWeek);
-        console.log('Leads por Fonte:', leadsBySource);
-
-        // Chamar funções para renderizar os gráficos (ex: renderChartJsCharts)
-        renderChartJsCharts(leadsByDetailedType, leadsByWeek, leadsBySource);
-
-    } catch (error) {
-        console.error('Erro ao carregar ou processar dados:', error);
     }
-}
 
-// Função para renderizar gráficos com Chart.js (exemplo)
-function renderChartJsCharts(dataByDetailedType, dataByWeek, dataBySource) {
-    // Exemplo de gráfico de barras para Total por Unidade/Tipo de Negócio
-    const totalLeadsCtx = document.getElementById('totalLeadsChart').getContext('2d');
-    new Chart(totalLeadsCtx, {
-        type: 'bar',
-        data: {
-            labels: Object.keys(dataByDetailedType),
-            datasets: [{
-                label: 'Total de Leads',
-                data: Object.values(dataByDetailedType),
-                backgroundColor: ['rgba(75, 192, 192, 0.6)', 'rgba(255, 159, 64, 0.6)', 'rgba(153, 102, 255, 0.6)'],
-                borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 159, 64, 1)', 'rgba(153, 102, 255, 1)'],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
+    // Função para criar o gráfico de Leads por Unidade
+    function createLeadsPorUnidadeChart(data) {
+        const ctx = document.getElementById('leadsPorUnidadeChart').getContext('2d');
+        const leadsPorUnidade = data.reduce((acc, curr) => {
+            acc[curr.unidade] = (acc[curr.unidade] || 0) + curr.quantidade;
+            return acc;
+        }, {});
+
+        charts.leadsPorUnidade = new Chart(ctx, {
+            type: 'pie', // Gráfico de pizza
+            data: {
+                labels: Object.keys(leadsPorUnidade),
+                datasets: [{
+                    label: 'Total de Leads',
+                    data: Object.values(leadsPorUnidade),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(153, 102, 255, 0.6)'
+                    ],
+                }]
             }
+        });
+    }
+
+    // Função para criar o gráfico de Leads por Semana
+    function createLeadsPorSemanaChart(data) {
+        const ctx = document.getElementById('leadsPorSemanaChart').getContext('2d');
+
+        // Função para obter o número da semana do ano a partir de uma data
+        const getWeekNumber = (d) => {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
         }
-    });
 
-    // Exemplo de gráfico de linha para Leads por Semana
-    const leadsByWeekCtx = document.getElementById('leadsByWeekChart').getContext('2d');
-    // Certifique-se de ordenar as semanas corretamente para o gráfico de linha
-    const sortedWeeks = Object.keys(dataByWeek).sort((a, b) => {
-        // Lógica de ordenação customizada para "Semana X"
-        const weekNumA = parseInt(a.replace('Semana ', ''));
-        const weekNumB = parseInt(b.replace('Semana ', ''));
-        return weekNumA - weekNumB;
-    });
+        const leadsPorSemana = data.reduce((acc, curr) => {
+            const date = new Date(curr.data);
+            const week = `Semana ${getWeekNumber(date)}`;
+            acc[week] = (acc[week] || 0) + curr.quantidade;
+            return acc;
+        }, {});
 
-    new Chart(leadsByWeekCtx, {
-        type: 'line',
-        data: {
-            labels: sortedWeeks,
-            datasets: [{
-                label: 'Leads por Semana',
-                data: sortedWeeks.map(week => dataByWeek[week]),
-                borderColor: 'rgba(54, 162, 235, 1)',
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                fill: true,
-                tension: 0.1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
+        const sortedWeeks = Object.keys(leadsPorSemana).sort((a, b) => {
+            return parseInt(a.split(' ')[1]) - parseInt(b.split(' ')[1]);
+        });
+
+        const sortedData = sortedWeeks.map(week => leadsPorSemana[week]);
+
+        charts.leadsPorSemana = new Chart(ctx, {
+            type: 'line', // Gráfico de linha
+            data: {
+                labels: sortedWeeks,
+                datasets: [{
+                    label: 'Total de Leads',
+                    data: sortedData,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    tension: 0.1,
+                    fill: false
+                }]
+            },
+            options: {
+                scales: { y: { beginAtZero: true } }
             }
-        }
-    });
-
-    // Exemplo de gráfico de pizza para Leads por Fonte
-    const leadsBySourceCtx = document.getElementById('leadsBySourceChart').getContext('2d');
-    new Chart(leadsBySourceCtx, {
-        type: 'pie',
-        data: {
-            labels: Object.keys(dataBySource),
-            datasets: [{
-                label: 'Leads por Fonte',
-                data: Object.values(dataBySource),
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.6)',
-                    'rgba(54, 162, 235, 0.6)',
-                    'rgba(255, 206, 86, 0.6)',
-                    'rgba(75, 192, 192, 0.6)',
-                    'rgba(153, 102, 255, 0.6)',
-                    'rgba(255, 159, 64, 0.6)'
-                ],
-                borderColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)',
-                    'rgba(255, 159, 64, 1)'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-                title: {
-                    display: true,
-                    text: 'Distribuição de Leads por Fonte'
-                }
-            }
-        }
-    });
-}
-
-// Chamar a função principal quando a página for carregada
-document.addEventListener('DOMContentLoaded', loadAndProcessData);
+        });
+    }
+});
