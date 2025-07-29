@@ -24,8 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
         'Contato Não Comercial'
     ];
     
-    // Tipos de Negociação que não devem ser considerados leads
-    const tiposDeNegociacaoExcluidos = ['Não comercial'];
+    // Tipos de Negociação que não devem ser considerados leads (em minúsculas para comparação)
+    const tiposDeNegociacaoExcluidos = ['não comercial'];
 
     // Configuração global para o plugin de datalabels
     Chart.register(ChartDataLabels);
@@ -47,7 +47,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 // REGRAS DE EXCLUSÃO
                 if (!row['Criado'] || row['Criado'].trim() === '') return null;
                 if (motivosParaDescarte.includes(row['Motivo de Descarte'])) return null;
-                if (!tipoNegociacao || tiposDeNegociacaoExcluidos.includes(tipoNegociacao)) return null;
+                
+                // CORREÇÃO: Padroniza o texto antes de verificar se deve ser excluído
+                if (!tipoNegociacao || tiposDeNegociacaoExcluidos.includes(tipoNegociacao.trim().toLowerCase())) {
+                    return null;
+                }
 
                 let unidade;
                 // LÓGICA DE DEFINIÇÃO DE UNIDADE
