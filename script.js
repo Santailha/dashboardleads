@@ -24,6 +24,9 @@ document.addEventListener('DOMContentLoaded', () => {
         'Contato Não Comercial'
     ];
     
+    // Tipos de Negociação que não devem ser considerados leads
+    const tiposDeNegociacaoExcluidos = ['Não comercial'];
+
     // Configuração global para o plugin de datalabels
     Chart.register(ChartDataLabels);
     Chart.defaults.set('plugins.datalabels', {
@@ -39,15 +42,23 @@ document.addEventListener('DOMContentLoaded', () => {
         skipEmptyLines: true,
         complete: function(results) {
             const processedData = results.data.map(row => {
+                const tipoNegociacao = row['Tipo de Negociação'];
+
+                // REGRAS DE EXCLUSÃO
                 if (!row['Criado'] || row['Criado'].trim() === '') return null;
                 if (motivosParaDescarte.includes(row['Motivo de Descarte'])) return null;
+                if (!tipoNegociacao || tiposDeNegociacaoExcluidos.includes(tipoNegociacao)) return null;
+
                 let unidade;
-                if (row['Tipo de Negociação'] === 'Compradores') {
+                // LÓGICA DE DEFINIÇÃO DE UNIDADE
+                if (tipoNegociacao === 'Compradores') {
                     const bairro = row['Bairro Principal'];
                     unidade = bairrosCampeche.includes(bairro) ? 'Vendas - Campeche' : 'Vendas - Centro';
                 } else {
-                    unidade = row['Tipo de Negociação'] || 'Não Informada';
+                    // Mantém outros tipos válidos, como "Locatários"
+                    unidade = tipoNegociacao;
                 }
+
                 return {
                     data: row['Criado'],
                     fonte: row['Fonte'] || 'Não Informada',
@@ -56,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     quantidade: 1
                 };
             }).filter(row => row !== null);
+
             allLeadsData = processedData;
             populateFilter(allLeadsData);
             updateDashboard(allLeadsData);
@@ -134,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     datalabels: {
                         anchor: 'end',
                         align: 'end',
-                        formatter: (value) => value > 0 ? value : '', // Mostra o valor, exceto se for 0
+                        formatter: (value) => value > 0 ? value : '',
                     }
                 }
             }
@@ -163,7 +175,6 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             options: {
                 plugins: {
-                    // Exibe a porcentagem no gráfico de pizza
                     datalabels: {
                         formatter: (value, ctx) => {
                             let sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
