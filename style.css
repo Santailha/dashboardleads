@@ -12,7 +12,7 @@ header {
 }
 
 header h1 {
-    color: #2c3e50;
+    color: #3d357e; /* COR DA MARCA */
 }
 
 main {
@@ -67,7 +67,7 @@ main {
     text-align: center;
     margin-top: 0;
     font-size: 1.2em;
-    color: #34495e;
+    color: #3d357e; /* COR DA MARCA */
 }
 
 .filtro-item {
@@ -83,18 +83,19 @@ main {
 .filtro-item button {
     padding: 8px 16px;
     border: none;
-    background-color: #3498db;
+    background-color: #edae0f; /* COR DA MARCA */
     color: white;
+    font-weight: bold;
     border-radius: 5px;
     cursor: pointer;
     align-self: flex-end;
     margin-top: 15px;
 }
 .filtro-item button:hover {
-    background-color: #2980b9;
+    background-color: #d49a0c; /* Tom mais escuro do amarelo para hover */
 }
 
-/* NOVO: Estilos para as tabelas de resumo */
+/* Estilos para as tabelas de resumo */
 #tables-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -112,7 +113,7 @@ main {
 .table-wrapper h3 {
     text-align: center;
     margin-top: 0;
-    color: #34495e;
+    color: #3d357e; /* COR DA MARCA */
 }
 
 .summary-table {
