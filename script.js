@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.values(charts).forEach(chart => chart.destroy());
         createLeadsPorFonteChart(data);
         createLeadsPorUnidadeChart(data);
-        createSummaryTables(data); // <-- Chamada para a nova função das tabelas
+        createSummaryTables(data);
     }
 
     function createLeadsPorFonteChart(data) {
@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 datasets: [{
                     label: 'Total de Leads',
                     data: sortedData.map(item => item[1]),
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    backgroundColor: '#3d357e99', // COR DA MARCA (azul com transparência)
                 }]
             },
             options: {
@@ -159,10 +159,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 datasets: [{
                     label: 'Total de Leads',
                     data: Object.values(leadsPorUnidade),
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.6)', 'rgba(54, 162, 235, 0.6)',
-                        'rgba(255, 206, 86, 0.6)', 'rgba(75, 192, 192, 0.6)',
-                        'rgba(153, 102, 255, 0.6)'
+                    backgroundColor: [ // PALETA DE CORES DA MARCA
+                        '#3d357e', // Azul
+                        '#edae0f', // Amarelo
+                        '#7c75b8', // Azul claro
+                        '#f2c75a', // Amarelo claro
+                        '#cccccc'  // Cinza
                     ],
                 }]
             },
@@ -175,60 +177,36 @@ document.addEventListener('DOMContentLoaded', () => {
                             return percentage;
                         },
                         color: '#fff',
+                        font: {
+                            weight: 'bold',
+                            size: 14
+                        }
                     }
                 }
             }
         });
     }
 
-    // NOVA FUNÇÃO PARA CRIAR AS TABELAS DE RESUMO
     function createSummaryTables(data) {
-        tablesContainer.innerHTML = ''; // Limpa as tabelas antigas
+        tablesContainer.innerHTML = '';
         const unidades = [...new Set(data.map(item => item.unidade))].sort();
-
         unidades.forEach(unidade => {
             const wrapper = document.createElement('div');
             wrapper.className = 'table-wrapper';
-
             const title = document.createElement('h3');
             title.textContent = unidade;
-
             const dataDaUnidade = data.filter(d => d.unidade === unidade);
             const totalGeral = dataDaUnidade.length;
-
             const leadsPorFonte = dataDaUnidade.reduce((acc, curr) => {
                 acc[curr.fonte] = (acc[curr.fonte] || 0) + 1;
                 return acc;
             }, {});
-            
             const sortedLeads = Object.entries(leadsPorFonte).sort(([,a],[,b]) => b-a);
-
-            let tableHTML = `
-                <table class="summary-table">
-                    <thead>
-                        <tr>
-                            <th>Fonte</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-            
+            let tableHTML = `<table class="summary-table"><thead><tr><th>Fonte</th><th>Total</th></tr></thead><tbody>`;
             sortedLeads.forEach(([fonte, total]) => {
                 tableHTML += `<tr><td>${fonte}</td><td>${total}</td></tr>`;
             });
-
-            tableHTML += `
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <td>Total geral</td>
-                            <td>${totalGeral}</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            `;
-
+            tableHTML += `</tbody><tfoot><tr><td>Total geral</td><td>${totalGeral}</td></tr></tfoot></table>`;
             wrapper.appendChild(title);
             wrapper.innerHTML += tableHTML;
             tablesContainer.appendChild(wrapper);
