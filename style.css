@@ -40,9 +40,17 @@ header h1 {
 
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    /* Ajustado para 2 colunas em telas maiores, e 1 em telas menores */
+    grid-template-columns: repeat(2, 1fr);
     gap: 20px;
 }
+
+@media (max-width: 900px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 
 .chart-container {
     background-color: #ffffff;
