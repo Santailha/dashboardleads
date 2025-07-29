@@ -1,58 +1,24 @@
-/* Definição das variáveis de cor */
-:root {
-    --cor-primaria: #3d357e;
-    --cor-secundaria: #edae0f;
-    --cor-fundo: #f4f7f9;
-    --cor-surface: #ffffff;
-    --cor-texto-primario: #333;
-    --cor-texto-secundario: #555;
-    --cor-borda: #ddd;
-    --cor-azul-claro: #7c75b8;
-    --cor-amarelo-escuro: #d49a0c;
-}
-
-body.dark-mode {
-    --cor-primaria: #a7a2e4;
-    --cor-secundaria: #edae0f;
-    --cor-fundo: #161625;
-    --cor-surface: #1e1e3f;
-    --cor-texto-primario: #e0e0e0;
-    --cor-texto-secundario: #b0b0b0;
-    --cor-borda: #444;
-}
-
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--cor-fundo);
-    color: var(--cor-texto-primario);
+    background-color: #f4f7f9;
+    color: #333;
     margin: 0;
     padding: 20px;
-    transition: background-color 0.3s, color 0.3s;
 }
 
 header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     text-align: center;
     margin-bottom: 30px;
-    padding: 0 20px;
-}
-
-.header-content {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-#logo {
-    max-width: 200px;
-    height: auto;
 }
 
 header h1 {
-    color: var(--cor-primaria);
-    margin: 0;
+    color: #3d357e; /* COR DA MARCA */
+}
+
+#logo {
+    max-width: 250px;
+    height: auto;
+    margin-top: 15px;
 }
 
 main {
@@ -61,7 +27,7 @@ main {
 }
 
 .filtros {
-    background-color: var(--cor-surface);
+    background-color: #fff;
     padding: 15px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -70,21 +36,17 @@ main {
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
-    border: 1px solid var(--cor-borda);
 }
 
 .filtros label {
     margin-right: 10px;
     font-weight: bold;
-    color: var(--cor-texto-secundario);
 }
 
 .filtros select, .filtros input {
     padding: 8px;
     border-radius: 5px;
-    border: 1px solid var(--cor-borda);
-    background-color: var(--cor-fundo);
-    color: var(--cor-texto-primario);
+    border: 1px solid #ccc;
 }
 
 .dashboard-grid {
@@ -100,18 +62,17 @@ main {
 }
 
 .chart-container {
-    background-color: var(--cor-surface);
+    background-color: #ffffff;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    border: 1px solid var(--cor-borda);
 }
 
 .chart-container h2 {
     text-align: center;
     margin-top: 0;
     font-size: 1.2em;
-    color: var(--cor-primaria);
+    color: #3d357e; /* COR DA MARCA */
 }
 
 .filtro-item {
@@ -127,7 +88,7 @@ main {
 .filtro-item button {
     padding: 8px 16px;
     border: none;
-    background-color: var(--cor-secundaria);
+    background-color: #edae0f; /* COR DA MARCA */
     color: white;
     font-weight: bold;
     border-radius: 5px;
@@ -136,7 +97,7 @@ main {
     margin-top: 15px;
 }
 .filtro-item button:hover {
-    background-color: var(--cor-amarelo-escuro);
+    background-color: #d49a0c; /* Tom mais escuro do amarelo para hover */
 }
 
 #tables-container {
@@ -147,8 +108,7 @@ main {
 }
 
 .table-wrapper {
-    background-color: var(--cor-surface);
-    border: 1px solid var(--cor-borda);
+    background-color: #fff;
     border-radius: 8px;
     padding: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -157,7 +117,7 @@ main {
 .table-wrapper h3 {
     text-align: center;
     margin-top: 0;
-    color: var(--cor-primaria);
+    color: #3d357e; /* COR DA MARCA */
 }
 
 .summary-table {
@@ -167,74 +127,20 @@ main {
 
 .summary-table th, .summary-table td {
     padding: 8px 12px;
-    border: 1px solid var(--cor-borda);
+    border: 1px solid #ddd;
     text-align: left;
 }
 
 .summary-table th {
-    background-color: var(--cor-fundo);
+    background-color: #f2f2f2;
     font-weight: bold;
 }
 
 .summary-table tr:nth-child(even) {
-    background-color: rgba(0,0,0,0.02);
+    background-color: #f9f9f9;
 }
 
 .summary-table tfoot td {
     font-weight: bold;
-    background-color: var(--cor-fundo);
-}
-
-/* Estilos do Interruptor de Tema */
-.theme-switch-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.theme-switch-wrapper span {
-    font-weight: bold;
-    color: var(--cor-texto-secundario);
-}
-.theme-switch {
-    position: relative;
-    display: inline-block;
-    width: 50px;
-    height: 24px;
-}
-.theme-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: .4s;
-}
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 16px;
-    width: 16px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    transition: .4s;
-}
-input:checked + .slider {
-    background-color: var(--cor-primaria);
-}
-input:checked + .slider:before {
-    transform: translateX(26px);
-}
-.slider.round {
-    border-radius: 34px;
-}
-.slider.round:before {
-    border-radius: 50%;
+    background-color: #e8e8e8;
 }
