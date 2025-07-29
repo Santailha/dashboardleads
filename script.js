@@ -124,16 +124,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Função para criar o gráfico de Leads por Semana
+    // Função para criar o gráfico de Leads por Semana (COM A CORREÇÃO)
     function createLeadsPorSemanaChart(data) {
         const ctx = document.getElementById('leadsPorSemanaChart').getContext('2d');
 
         // Função para converter data do formato "dd/mm/aaaa HH:MM:SS" para um objeto Date
         const parseDate = (dateString) => {
-            const [datePart, timePart] = dateString.split(' ');
-            if (!datePart || !timePart) return null;
+            // VERIFICAÇÃO DE SEGURANÇA: Retorna nulo se a data for inválida ou vazia
+            if (!dateString || typeof dateString !== 'string') {
+                return null;
+            }
+
+            const parts = dateString.split(' ');
+            if (parts.length < 2) {
+                return null;
+            }
+
+            const [datePart, timePart] = parts;
             const [day, month, year] = datePart.split('/');
-            if (!day || !month || !year) return null;
+
+            if (!day || !month || !year || year.length < 4) {
+                return null;
+            }
+
+            // Retorna a data formatada corretamente
             return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${timePart}`);
         };
         
@@ -146,7 +160,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const leadsPorSemana = data.reduce((acc, curr) => {
             const date = parseDate(curr.data);
-            if (!date || isNaN(date)) return acc;
+            // Pula para a próxima linha se a data for inválida
+            if (!date || isNaN(date.getTime())) {
+                return acc;
+            }
             const year = date.getFullYear();
             const week = `Semana ${getWeekNumber(date)}/${year}`;
             acc[week] = (acc[week] || 0) + curr.quantidade;
