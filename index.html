@@ -10,69 +10,45 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 </head>
 <body>
-    <header>
-        <h1>Dashboard de Análise de Leads</h1>
-        <img src="image_a68ea4.png" alt="Logo da Empresa" id="logo">
-    </header>
+    <div id="dashboard-main-content">
+        <header>
+            <h1>Dashboard de Análise de Leads</h1>
+            <img src="image_a68ea4.png" alt="Logo da Empresa" id="logo">
+            <button id="logout-button">Sair</button>
+        </header>
 
-    <main>
-        <div class="kpi-container">
-            <div class="kpi-card">
-                <h2>Total de Leads</h2>
-                <p id="kpi-total-leads">-</p>
+        <main>
+            <div class="kpi-container">
+                <div class="kpi-card"><h2>Total de Leads</h2><p id="kpi-total-leads">-</p></div>
+                <div class="kpi-card" id="mql-kpi-card"><h2>Total de MQLs</h2><p id="kpi-total-mqls">-</p></div>
+                <div class="kpi-card"><h2>Taxa de Conversão</h2><p id="kpi-conversao">-</p></div>
             </div>
-            <div class="kpi-card" id="mql-kpi-card">
-                <h2>Total de MQLs</h2>
-                <p id="kpi-total-mqls">-</p>
+            <div class="filtros">
+                <div class="filtro-item"><label for="unidade-filter">Filtrar por Unidade:</label><select id="unidade-filter"><option value="todas">Todas as Unidades</option></select></div>
+                <div class="filtro-item"><label for="start-date">Data Início (Criação do Lead):</label><input type="date" id="start-date"></div>
+                <div class="filtro-item"><label for="end-date">Data Fim (Criação do Lead):</label><input type="date" id="end-date"></div>
+                <div class="filtro-item"><button id="filter-button">Filtrar</button></div>
             </div>
-            <div class="kpi-card">
-                <h2>Taxa de Conversão</h2>
-                <p id="kpi-conversao">-</p>
+            <div class="dashboard-grid">
+                <div class="chart-container"><h2>Leads por Fonte</h2><canvas id="leadsPorFonteChart"></canvas></div>
+                <div class="chart-container"><h2>Leads por Unidade</h2><canvas id="leadsPorUnidadeChart"></canvas></div>
             </div>
-        </div>
+            <div id="tables-container"></div>
+        </main>
 
-        <div class="filtros">
-            <div class="filtro-item">
-                <label for="unidade-filter">Filtrar por Unidade:</label>
-                <select id="unidade-filter">
-                    <option value="todas">Todas as Unidades</option>
-                </select>
+        <div id="drill-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <h2 id="modal-title">Detalhes</h2>
+                <div id="modal-details-table"></div>
             </div>
-            <div class="filtro-item">
-                <label for="start-date">Data Início (Criação do Lead):</label>
-                <input type="date" id="start-date">
-            </div>
-            <div class="filtro-item">
-                <label for="end-date">Data Fim (Criação do Lead):</label>
-                <input type="date" id="end-date">
-            </div>
-            <div class="filtro-item">
-                <button id="filter-button">Filtrar</button>
-            </div>
-        </div>
-
-        <div class="dashboard-grid">
-            <div class="chart-container">
-                <h2>Leads por Fonte</h2>
-                <canvas id="leadsPorFonteChart"></canvas>
-            </div>
-            <div class="chart-container">
-                <h2>Leads por Unidade</h2>
-                <canvas id="leadsPorUnidadeChart"></canvas>
-            </div>
-        </div>
-
-        <div id="tables-container"></div>
-    </main>
-
-    <div id="drill-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2 id="modal-title">Detalhes</h2>
-            <div id="modal-details-table"></div>
         </div>
     </div>
-
+    
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    
+    <script src="auth.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
