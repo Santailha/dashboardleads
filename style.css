@@ -1,4 +1,3 @@
-/* ... (todo o CSS anterior continua o mesmo) ... */
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; }
 header { text-align: center; margin-bottom: 30px; }
 header h1 { color: #3d357e; }
@@ -15,7 +14,6 @@ main { max-width: 1200px; margin: 0 auto; }
 @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
 .chart-container { background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 .chart-container h2 { text-align: center; margin-top: 0; font-size: 1.2em; color: #3d357e; }
-/* NOVO: Indica que a área do gráfico é clicável */
 .chart-container canvas { cursor: pointer; }
 .filtro-item { display: flex; flex-direction: column; margin: 5px 15px; }
 .filtro-item label { margin-bottom: 5px; font-size: 0.9em; }
@@ -29,61 +27,23 @@ main { max-width: 1200px; margin: 0 auto; }
 .summary-table th { background-color: #f2f2f2; font-weight: bold; }
 .summary-table tr:nth-child(even) { background-color: #f9f9f9; }
 .summary-table tfoot td { font-weight: bold; background-color: #e8e8e8; }
+.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
+.modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; position: relative; }
+.close-button { color: #aaa; position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; }
+.close-button:hover, .close-button:focus { color: black; text-decoration: none; cursor: pointer; }
+#modal-details-table table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+#modal-details-table th, #modal-details-table td { border: 1px solid #ddd; padding: 8px; }
+#modal-details-table th { padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #3d357e; color: white; }
 
-
-/* NOVO: Estilos para a Janela Modal do Drill-Through */
-.modal {
-    display: none; /* Escondido por padrão */
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.6);
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 10% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 600px;
-    border-radius: 8px;
-    position: relative;
-}
-
-.close-button {
-    color: #aaa;
-    position: absolute;
-    top: 10px;
-    right: 20px;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.close-button:hover,
-.close-button:focus {
-    color: black;
-    text-decoration: none;
+/* NOVO: Estilos para indicar que MQLs são clicáveis */
+#mql-kpi-card, .mql-cell {
     cursor: pointer;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
-
-#modal-details-table table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
+#mql-kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
-#modal-details-table th, #modal-details-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-}
-#modal-details-table th {
-    padding-top: 12px;
-    padding-bottom: 12px;
-    text-align: left;
-    background-color: #3d357e;
-    color: white;
+.mql-cell:hover {
+    background-color: #e0e0e0 !important;
 }
