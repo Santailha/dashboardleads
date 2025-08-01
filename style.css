@@ -7,8 +7,6 @@ main { max-width: 1200px; margin: 0 auto; }
 .kpi-card { background-color: #fff; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 .kpi-card h2 { margin: 0 0 10px 0; font-size: 1.1em; color: #3d357e; }
 .kpi-card p { margin: 0; font-size: 2.5em; font-weight: bold; color: #333; }
-
-/* Estilos atualizados para a barra de filtros */
 .filtros { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; flex-direction: column; gap: 20px; }
 .filtro-main, .filtro-dynamic { display: flex; justify-content: center; align-items: flex-start; flex-wrap: wrap; gap: 20px; }
 .filtro-action { display: flex; justify-content: center; }
@@ -21,7 +19,6 @@ main { max-width: 1200px; margin: 0 auto; }
 .checkbox-group label { display: block; margin-bottom: 5px; font-weight: normal; }
 .filtro-action button { padding: 10px 30px; border: none; background-color: #edae0f; color: white; font-weight: bold; border-radius: 5px; cursor: pointer; font-size: 16px; }
 .filtro-action button:hover { background-color: #d49a0c; }
-
 .dashboard-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
 @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
 .chart-container { background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
