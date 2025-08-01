@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     // === ELEMENTOS DO HTML ===
-    const unidadeFilter = document.getElementById('unidade-filter');
+    const tipoNegociacaoFilter = document.getElementById('tipo-negociacao-filter');
+    const unidadeVendaContainer = document.getElementById('unidade-venda-container');
+    const unidadeVendaFilter = document.getElementById('unidade-venda-filter');
     const startDateInput = document.getElementById('start-date');
     const endDateInput = document.getElementById('end-date');
     const filterButton = document.getElementById('filter-button');
@@ -16,39 +18,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeModalButton = document.querySelector('.close-button');
     const motivosDescarteContainer = document.getElementById('motivos-descarte-filters');
 
-    // === VARIÁVEIS GLOBAIS E REGRAS ===
+    // === VARIÁVEIS GLOBAIS ===
     let allLeads = [];
     let allMqls = [];
     let charts = {};
     let currentFilteredLeads = [];
     let currentFilteredMqls = [];
+
+    // === REGRAS DE NEGÓCIO ===
     const bairrosCampeche = ['Campeche', 'Morro das Pedras', 'Ribeirao da Ilha', 'Armação', 'Açores', 'Barra da Lagoa', 'Carianos', 'Costeira do Pirajubaé', 'Lagoa da Conceição', 'Novo Campeche', 'Praia Mole', 'Pântano do Sul', 'Rio Tavares', 'Tapera', 'Saco dos Limões'];
     const mqlDateColumnVendas = 'Fase Atendimento do Lead - Vendas';
     const mqlEtapaLocacao = 'Ganho';
 
-    // === URLs PÚBLICAS DE TESTE ===
-    const leadsUrl = 'https://gist.githubusercontent.com/anonymous/5e2a2c1f3643b2f7044a7f05813735e5/raw/leads.csv';
-    const dealsVendasUrl = 'https://gist.githubusercontent.com/anonymous/5e2a2c1f3643b2f7044a7f05813735e5/raw/deals_vendas.csv';
-
-
     // === INICIALIZAÇÃO ===
     Chart.register(ChartDataLabels);
     Chart.defaults.set('plugins.datalabels', { color: '#444', font: { weight: 'bold' } });
+    
     const loadFile = (url) => new Promise((resolve, reject) => { Papa.parse(url, { download: true, header: true, skipEmptyLines: true, complete: results => resolve(results.data), error: err => reject(err) }); });
     
     Promise.all([
-        loadFile(leadsUrl),
-        loadFile(dealsVendasUrl)
-    ]).then(([leadData, dealsVendasData]) => {
-        processAllData(leadData, dealsVendasData);
-        populateDynamicFilters(allLeads);
+        loadFile('leads.csv'),
+        loadFile('deals_vendas.csv'),
+        loadFile('deals_locacao.csv')
+    ]).then(([leadData, dealsVendasData, dealsLocacaoData]) => {
+        processAllData(leadData, dealsVendasData, dealsLocacaoData);
+        populateFilters(allLeads);
         applyFilters();
     }).catch(err => {
-        console.error("Erro ao carregar os arquivos CSV de teste:", err);
-        tablesContainer.innerHTML = `<p style="color: red; text-align: center;">Ocorreu um erro crítico ao carregar os dados de teste.</p>`;
+        console.error("Erro ao carregar os arquivos CSV:", err);
+        tablesContainer.innerHTML = `<p style="color: red; text-align: center;">Erro ao carregar arquivos. Verifique se o repositório está Público e se os arquivos 'leads.csv', 'deals_vendas.csv' e 'deals_locacao.csv' existem.</p>`;
     });
     
-    function processAllData(leadData, dealsVendasData) {
+    function processAllData(leadData, dealsVendasData, dealsLocacaoData) {
         allLeads = leadData.map(row => {
             const tipoNegociacao = row['Tipo de Negociação'] || row['Tipo de NegociaÃ§Ã£o'];
             if (!row['Criado'] || !tipoNegociacao) return null;
@@ -66,31 +67,69 @@ document.addEventListener('DOMContentLoaded', () => {
             return { id: row['ID'], nome: row['Nome do negócio'], mqlDate: parseDate(row[mqlDateColumnVendas]), leadDate: parseDate(row['Data e hora da criação do Lead']), fonte: row['Fonte'] || 'Não Informada', unidade: unidade };
         }).filter(Boolean);
 
-        const mqlsLocacao = leadData.map(row => {
-            const tipoNegociacao = row['Tipo de Negociação'] || row['Tipo de NegociaÃ§Ã£o'];
-            if (tipoNegociacao === 'Locatários' && row['Etapa'] === mqlEtapaLocacao) {
-                return {
-                    id: row['ID'], nome: row['Nome do Lead'], mqlDate: parseDate(row['Criado']),
-                    leadDate: parseDate(row['Criado']), fonte: row['Fonte'] || 'Não Informada', unidade: 'MQL Locação'
-                };
-            }
-            return null;
+        const mqlsLocacao = dealsLocacaoData.map(row => {
+            if (!row['Data e Hora de entrada na fase Confirmação de visita loc.'] || !row['Data e hora da criação do Lead']) return null;
+            return { id: row['ID'], nome: row['Nome do negócio'], mqlDate: parseDate(row['Data e Hora de entrada na fase Confirmação de visita loc.']), leadDate: parseDate(row['Data e hora da criação do Lead']), fonte: row['Fonte'] || 'Não Informada', unidade: 'MQL Locação' };
         }).filter(Boolean);
         
         allMqls = [...mqlsVendas, ...mqlsLocacao];
-        populateFilter(allLeads);
     }
     
-    function populateDynamicFilters(leads) {
-        const motivosDescartePadrao = ['Atendimento Duplicado', 'Cadastro Duplicado', 'Contato Não Comercial'];
+    function populateFilters(leads) {
+        const tipos = [...new Set(leads.map(lead => lead.tipoNegociacao).filter(Boolean))].sort();
+        tipos.forEach(tipo => {
+            const option = document.createElement('option');
+            option.value = tipo;
+            option.textContent = tipo;
+            tipoNegociacaoFilter.appendChild(option);
+        });
+
         const motivos = [...new Set(leads.map(lead => lead.motivoDescarte).filter(Boolean))].sort();
-        motivosDescarteContainer.innerHTML = motivos.map(motivo => `<label><input type="checkbox" class="motivo-descarte-check" value="${motivo}" ${motivosDescartePadrao.includes(motivo) ? 'checked' : ''}> ${motivo}</label>`).join('');
+        motivosDescarteContainer.innerHTML = motivos.map(motivo => `<label><input type="checkbox" class="motivo-descarte-check" value="${motivo}"> ${motivo}</label>`).join('');
     }
 
-    // O restante do script continua o mesmo
+    // === LÓGICA DOS FILTROS ===
+    tipoNegociacaoFilter.addEventListener('change', () => {
+        unidadeVendaContainer.style.display = (tipoNegociacaoFilter.value === 'Compradores') ? 'flex' : 'none';
+    });
+
     filterButton.addEventListener('click', applyFilters);
-    function applyFilters() { /* ... */ }
-    function populateFilter(data) { /* ... */ }
+
+    function applyFilters() {
+        const selectedTipo = tipoNegociacaoFilter.value;
+        const selectedUnidadeVenda = unidadeVendaFilter.value;
+        const startDate = startDateInput.value ? new Date(startDateInput.value + 'T00:00:00') : null;
+        const endDate = endDateInput.value ? new Date(endDateInput.value + 'T23:59:59') : null;
+        const motivosExcluir = [...document.querySelectorAll('.motivo-descarte-check:checked')].map(cb => cb.value);
+        
+        currentFilteredLeads = allLeads.filter(lead => {
+            if (motivosExcluir.includes(lead.motivoDescarte)) return false;
+            if (startDate && lead.leadDate < startDate) return false;
+            if (endDate && lead.leadDate > endDate) return false;
+            if (selectedTipo !== 'todos' && lead.tipoNegociacao !== selectedTipo) return false;
+            if (selectedTipo === 'Compradores' && selectedUnidadeVenda !== 'todas' && lead.unidade !== selectedUnidadeVenda) return false;
+            return true;
+        });
+        
+        currentFilteredMqls = allMqls.filter(mql => {
+            if (!mql.leadDate) return false;
+            if (startDate && mql.leadDate < startDate) return false;
+            if (endDate && mql.leadDate > endDate) return false;
+
+            const leadCorrespondente = allLeads.find(l => l.id === mql.id && l.leadDate.getTime() === mql.leadDate.getTime());
+            if (leadCorrespondente) {
+                if (motivosExcluir.includes(leadCorrespondente.motivoDescarte)) return false;
+                if (selectedTipo !== 'todos' && leadCorrespondente.tipoNegociacao !== selectedTipo) return false;
+                if (selectedTipo === 'Compradores' && selectedUnidadeVenda !== 'todas' && leadCorrespondente.unidade !== selectedUnidadeVenda) return false;
+            } else { // Se não encontrar lead correspondente, pode ser um MQL de um lead fora do período
+                 return false;
+            }
+            return true;
+        });
+        
+        updateDashboard(currentFilteredLeads, currentFilteredMqls);
+    }
+    
     function updateDashboard(leads, mqls) { /* ... */ }
     function updateKPIs(leads, mqls) { /* ... */ }
     function showDrillModal(title, items, type = 'lead') { /* ... */ }
@@ -104,33 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function createLeadsPorUnidadeChart(data) { /* ... */ }
 
     // Colando o restante das funções para garantir a integridade
-    applyFilters = () => {
-        const selectedUnidade = unidadeFilter.value;
-        const startDate = startDateInput.value ? new Date(startDateInput.value + 'T00:00:00') : null;
-        const endDate = endDateInput.value ? new Date(endDateInput.value + 'T23:59:59') : null;
-        const motivosExcluir = [...document.querySelectorAll('.motivo-descarte-check:checked')].map(cb => cb.value);
-        currentFilteredLeads = allLeads.filter(lead => {
-            if (motivosExcluir.includes(lead.motivoDescarte)) return false;
-            if (startDate && lead.leadDate < startDate) return false;
-            if (endDate && lead.leadDate > endDate) return false;
-            if (selectedUnidade !== 'todos' && lead.unidade !== selectedUnidade) return false;
-            return true;
-        });
-        currentFilteredMqls = allMqls.filter(mql => {
-            if (!mql.leadDate) return false;
-            if (startDate && mql.leadDate < startDate) return false;
-            if (endDate && mql.leadDate > endDate) return false;
-            const leadCorrespondente = allLeads.find(l => l.id === mql.id);
-            if(leadCorrespondente){
-                 if (motivosExcluir.includes(leadCorrespondente.motivoDescarte)) return false;
-            }
-            const mqlUnidadeCorresponde = `MQL ${selectedUnidade}`;
-            if (selectedUnidade !== 'todos' && mql.unidade !== mqlUnidadeCorresponde && !(selectedUnidade === 'Locatários' && mql.unidade === 'MQL Locação')) return false;
-            return true;
-        });
-        updateDashboard(currentFilteredLeads, currentFilteredMqls);
-    };
-    populateFilter = (data) => { unidadeFilter.innerHTML = '<option value="todas">Todas as Unidades</option>'; const unidades = [...new Set(data.map(item => item.unidade))]; unidades.sort().forEach(unidade => { const option = document.createElement('option'); option.value = unidade; option.textContent = unidade; unidadeFilter.appendChild(option); }); };
     updateDashboard = (leads, mqls) => { Object.values(charts).forEach(chart => chart.destroy()); updateKPIs(leads, mqls); createLeadsPorFonteChart(leads); createLeadsPorUnidadeChart(leads); createSummaryTables(leads, mqls); };
     updateKPIs = (leads, mqls) => { const totalLeads = leads.length; const totalMqls = mqls.length; const conversao = totalLeads > 0 ? ((totalMqls / totalLeads) * 100).toFixed(1) + '%' : '0%'; kpiTotalLeads.textContent = totalLeads; kpiTotalMqls.textContent = totalMqls; kpiConversao.textContent = conversao; };
     showDrillModal = (title, items, type = 'lead') => { modalTitle.textContent = title; const nameHeader = type === 'lead' ? 'Nome do Lead' : 'Nome do Negócio'; let tableHTML = `<table><thead><tr><th>ID</th><th>${nameHeader}</th></tr></thead><tbody>`; if (items.length > 0) { items.forEach(item => { tableHTML += `<tr><td>${item.id || ''}</td><td>${item.nome || ''}</td></tr>`; }); } else { tableHTML += '<tr><td colspan="2">Nenhum dado encontrado.</td></tr>'; } tableHTML += '</tbody></table>'; modalDetailsTable.innerHTML = tableHTML; modal.style.display = 'block'; };
