@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     // === ELEMENTOS DO HTML ===
-    const unidadeFilter = document.getElementById('unidade-filter');
+    const tipoNegociacaoFilter = document.getElementById('tipo-negociacao-filter');
+    const unidadeVendaContainer = document.getElementById('unidade-venda-container');
+    const unidadeVendaFilter = document.getElementById('unidade-venda-filter');
     const startDateInput = document.getElementById('start-date');
     const endDateInput = document.getElementById('end-date');
     const filterButton = document.getElementById('filter-button');
@@ -15,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalDetailsTable = document.getElementById('modal-details-table');
     const closeModalButton = document.querySelector('.close-button');
     const motivosDescarteContainer = document.getElementById('motivos-descarte-filters');
-    const tiposNegociacaoContainer = document.getElementById('tipos-negociacao-filters');
 
     // === VARIÁVEIS GLOBAIS ===
     let allLeads = [];
@@ -34,16 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
     Chart.register(ChartDataLabels);
     Chart.defaults.set('plugins.datalabels', { color: '#444', font: { weight: 'bold' } });
     const loadFile = (url) => new Promise((resolve, reject) => { Papa.parse(url, { download: true, header: true, skipEmptyLines: true, complete: results => resolve(results.data), error: err => reject(err) }); });
-    Promise.all([ loadFile('leads.csv'), loadFile('deals_vendas.csv'), loadFile('deals_locacao.csv') ]).then(([leadData, dealsVendasData, dealsLocacaoData]) => { processAllData(leadData, dealsVendasData, dealsLocacaoData); populateDynamicFilters(allLeads); applyFilters(); }).catch(err => { console.error("Erro ao carregar os arquivos CSV:", err); tablesContainer.innerHTML = `<p style="color: red; text-align: center;">Erro ao carregar arquivos. Verifique os nomes dos arquivos.</p>`; });
+    Promise.all([ loadFile('leads.csv'), loadFile('deals_vendas.csv'), loadFile('deals_locacao.csv') ]).then(([leadData, dealsVendasData, dealsLocacaoData]) => { processAllData(leadData, dealsVendasData, dealsLocacaoData); populateFilters(allLeads); applyFilters(); }).catch(err => { console.error("Erro ao carregar os arquivos CSV:", err); tablesContainer.innerHTML = `<p style="color: red; text-align: center;">Erro ao carregar arquivos. Verifique os nomes dos arquivos.</p>`; });
     
     function processAllData(leadData, dealsVendasData, dealsLocacaoData) {
         allLeads = leadData.map(row => {
-            // CORREÇÃO: Lê a coluna 'Tipo de Negociação' com os dois nomes possíveis (correto e com erro de codificação)
             const tipoNegociacao = row['Tipo de Negociação'] || row['Tipo de NegociaÃ§Ã£o'];
-            const bairroPrincipal = row['Bairro Principal'] || row['Bairro Principal']; // Adicionando fallback para bairro
-
             if (!row['Criado'] || !tipoNegociacao) return null;
-            let unidade = (tipoNegociacao === 'Compradores') ? (bairrosCampeche.includes(bairroPrincipal) ? 'Vendas - Campeche' : 'Vendas - Centro') : tipoNegociacao;
+            let unidade = (tipoNegociacao === 'Compradores') ? (bairrosCampeche.includes(row['Bairro Principal']) ? 'Vendas - Campeche' : 'Vendas - Centro') : tipoNegociacao;
             return {
                 id: row['ID'], nome: row['Nome do Lead'], leadDate: parseDate(row['Criado']),
                 fonte: row['Fonte'] || 'Não Informada', unidade: unidade, quantidade: 1,
@@ -53,44 +51,77 @@ document.addEventListener('DOMContentLoaded', () => {
         const mqlsVendas = dealsVendasData.map(row => { if (!row[mqlDateColumnVendas] || !row['Data e hora da criação do Lead']) return null; let unidade = bairrosCampeche.includes(row['Bairros (LS)']) ? 'MQL Vendas - Campeche' : 'MQL Vendas - Centro'; return { id: row['ID'], nome: row['Nome do negócio'], mqlDate: parseDate(row[mqlDateColumnVendas]), leadDate: parseDate(row['Data e hora da criação do Lead']), fonte: row['Fonte'] || 'Não Informada', unidade: unidade }; }).filter(Boolean);
         const mqlsLocacao = dealsLocacaoData.map(row => { if (!row[mqlDateColumnLocacao] || !row['Data e hora da criação do Lead']) return null; return { id: row['ID'], nome: row['Nome do negócio'], mqlDate: parseDate(row[mqlDateColumnLocacao]), leadDate: parseDate(row['Data e hora da criação do Lead']), fonte: row['Fonte'] || 'Não Informada', unidade: 'MQL Locação' }; }).filter(Boolean);
         allMqls = [...mqlsVendas, ...mqlsLocacao];
-        populateFilter(allLeads);
     }
     
-    function populateDynamicFilters(leads) {
-        const motivos = [...new Set(leads.map(lead => lead.motivoDescarte).filter(Boolean))].sort();
+    function populateFilters(leads) {
+        // Popula filtro de Tipo de Negociação
         const tipos = [...new Set(leads.map(lead => lead.tipoNegociacao).filter(Boolean))].sort();
+        tipos.forEach(tipo => {
+            const option = document.createElement('option');
+            option.value = tipo;
+            option.textContent = tipo;
+            tipoNegociacaoFilter.appendChild(option);
+        });
+
+        // Popula filtro de Motivos de Descarte
+        const motivos = [...new Set(leads.map(lead => lead.motivoDescarte).filter(Boolean))].sort();
         motivosDescarteContainer.innerHTML = motivos.map(motivo => `<label><input type="checkbox" class="motivo-descarte-check" value="${motivo}" ${motivosDescartePadrao.includes(motivo) ? 'checked' : ''}> ${motivo}</label>`).join('');
-        tiposNegociacaoContainer.innerHTML = tipos.map(tipo => `<label><input type="checkbox" class="tipo-negociacao-check" value="${tipo}"> ${tipo}</label>`).join('');
     }
-    
-    // (O restante do script é idêntico à versão anterior)
+
+    // === LÓGICA DOS FILTROS ===
+    tipoNegociacaoFilter.addEventListener('change', () => {
+        if (tipoNegociacaoFilter.value === 'Compradores') {
+            unidadeVendaContainer.style.display = 'flex';
+        } else {
+            unidadeVendaContainer.style.display = 'none';
+        }
+    });
+
     filterButton.addEventListener('click', applyFilters);
+
     function applyFilters() {
-        const selectedUnidade = unidadeFilter.value;
+        const selectedTipo = tipoNegociacaoFilter.value;
+        const selectedUnidadeVenda = unidadeVendaFilter.value;
         const startDate = startDateInput.value ? new Date(startDateInput.value + 'T00:00:00') : null;
         const endDate = endDateInput.value ? new Date(endDateInput.value + 'T23:59:59') : null;
         const motivosExcluir = [...document.querySelectorAll('.motivo-descarte-check:checked')].map(cb => cb.value);
-        const tiposExcluir = [...document.querySelectorAll('.tipo-negociacao-check:checked')].map(cb => cb.value);
-        currentFilteredLeads = allLeads.filter(lead => {
+        
+        let filteredLeads = allLeads.filter(lead => {
             if (motivosExcluir.includes(lead.motivoDescarte)) return false;
-            if (tiposExcluir.includes(lead.tipoNegociacao)) return false;
-            if (!lead.leadDate) return false;
             if (startDate && lead.leadDate < startDate) return false;
             if (endDate && lead.leadDate > endDate) return false;
-            if (selectedUnidade !== 'todas' && lead.unidade !== selectedUnidade) return false;
+
+            if (selectedTipo !== 'todos' && lead.tipoNegociacao !== selectedTipo) return false;
+            
+            // Filtro condicional de unidade
+            if (selectedTipo === 'Compradores' && selectedUnidadeVenda !== 'todas' && lead.unidade !== selectedUnidadeVenda) {
+                return false;
+            }
             return true;
         });
-        currentFilteredMqls = allMqls.filter(mql => {
+        currentFilteredLeads = filteredLeads;
+        
+        // Filtro de MQLs precisa acompanhar a lógica
+        let filteredMqls = allMqls.filter(mql => {
             if (!mql.leadDate) return false;
             if (startDate && mql.leadDate < startDate) return false;
             if (endDate && mql.leadDate > endDate) return false;
-            const mqlUnidadeCorresponde = `MQL ${selectedUnidade}`;
-            if (selectedUnidade !== 'todas' && mql.unidade !== mqlUnidadeCorresponde && !(selectedUnidade === 'Locatários' && mql.unidade === 'MQL Locação')) return false;
+
+            const leadCorrespondente = allLeads.find(l => l.leadDate.getTime() === mql.leadDate.getTime() && l.fonte === mql.fonte);
+            if(leadCorrespondente){
+                if (motivosExcluir.includes(leadCorrespondente.motivoDescarte)) return false;
+                if (selectedTipo !== 'todos' && leadCorrespondente.tipoNegociacao !== selectedTipo) return false;
+                if (selectedTipo === 'Compradores' && selectedUnidadeVenda !== 'todas' && leadCorrespondente.unidade !== selectedUnidadeVenda) return false;
+            }
+            
             return true;
         });
-        updateDashboard(currentFilteredLeads, currentFilteredMqls);
+        currentFilteredMqls = filteredMqls;
+        
+        updateDashboard(filteredLeads, filteredMqls);
     }
-    function populateFilter(data) { unidadeFilter.innerHTML = '<option value="todas">Todas as Unidades</option>'; const unidades = [...new Set(data.map(item => item.unidade))].sort(); unidades.forEach(unidade => { const option = document.createElement('option'); option.value = unidade; option.textContent = unidade; unidadeFilter.appendChild(option); }); }
+    
+    // O restante do script (updateDashboard, KPIs, tabelas, etc.) continua o mesmo...
     function updateDashboard(leads, mqls) { Object.values(charts).forEach(chart => chart.destroy()); updateKPIs(leads, mqls); createLeadsPorFonteChart(leads); createLeadsPorUnidadeChart(leads); createSummaryTables(leads, mqls); }
     function updateKPIs(leads, mqls) { const totalLeads = leads.length; const totalMqls = mqls.length; const conversao = totalLeads > 0 ? ((totalMqls / totalLeads) * 100).toFixed(1) + '%' : '0%'; kpiTotalLeads.textContent = totalLeads; kpiTotalMqls.textContent = totalMqls; kpiConversao.textContent = conversao; }
     function showDrillModal(title, items, type = 'lead') { modalTitle.textContent = title; const nameHeader = type === 'lead' ? 'Nome do Lead' : 'Nome do Negócio'; let tableHTML = `<table><thead><tr><th>ID</th><th>${nameHeader}</th></tr></thead><tbody>`; if (items.length > 0) { items.forEach(item => { tableHTML += `<tr><td>${item.id || ''}</td><td>${item.nome || ''}</td></tr>`; }); } else { tableHTML += '<tr><td colspan="2">Nenhum dado encontrado.</td></tr>'; } tableHTML += '</tbody></table>'; modalDetailsTable.innerHTML = tableHTML; modal.style.display = 'block'; }
