@@ -15,38 +15,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalDetailsTable = document.getElementById('modal-details-table');
     const closeModalButton = document.querySelector('.close-button');
     const motivosDescarteContainer = document.getElementById('motivos-descarte-filters');
-    const tiposNegociacaoContainer = document.getElementById('tipos-negociacao-filters');
 
-    // === VARIÁVEIS GLOBAIS ===
+    // === VARIÁVEIS GLOBAIS E REGRAS ===
     let allLeads = [];
     let allMqls = [];
     let charts = {};
     let currentFilteredLeads = [];
     let currentFilteredMqls = [];
-
-    // === REGRAS DE NEGÓCIO ===
     const bairrosCampeche = ['Campeche', 'Morro das Pedras', 'Ribeirao da Ilha', 'Armação', 'Açores', 'Barra da Lagoa', 'Carianos', 'Costeira do Pirajubaé', 'Lagoa da Conceição', 'Novo Campeche', 'Praia Mole', 'Pântano do Sul', 'Rio Tavares', 'Tapera', 'Saco dos Limões'];
     const mqlDateColumnVendas = 'Fase Atendimento do Lead - Vendas';
-    // Nova regra para MQL de Locação
     const mqlEtapaLocacao = 'Ganho';
+
+    // === URLs PÚBLICAS DE TESTE ===
+    const leadsUrl = 'https://gist.githubusercontent.com/anonymous/5e2a2c1f3643b2f7044a7f05813735e5/raw/leads.csv';
+    const dealsVendasUrl = 'https://gist.githubusercontent.com/anonymous/5e2a2c1f3643b2f7044a7f05813735e5/raw/deals_vendas.csv';
+
 
     // === INICIALIZAÇÃO ===
     Chart.register(ChartDataLabels);
     Chart.defaults.set('plugins.datalabels', { color: '#444', font: { weight: 'bold' } });
-    
     const loadFile = (url) => new Promise((resolve, reject) => { Papa.parse(url, { download: true, header: true, skipEmptyLines: true, complete: results => resolve(results.data), error: err => reject(err) }); });
     
-    // Agora carrega apenas 2 arquivos
     Promise.all([
-        loadFile('leads.csv'),
-        loadFile('deals_vendas.csv')
+        loadFile(leadsUrl),
+        loadFile(dealsVendasUrl)
     ]).then(([leadData, dealsVendasData]) => {
         processAllData(leadData, dealsVendasData);
         populateDynamicFilters(allLeads);
         applyFilters();
     }).catch(err => {
-        console.error("Erro ao carregar os arquivos CSV:", err);
-        tablesContainer.innerHTML = `<p style="color: red; text-align: center;">Erro ao carregar arquivos. Verifique se os arquivos 'leads.csv' e 'deals_vendas.csv' estão no repositório.</p>`;
+        console.error("Erro ao carregar os arquivos CSV de teste:", err);
+        tablesContainer.innerHTML = `<p style="color: red; text-align: center;">Ocorreu um erro crítico ao carregar os dados de teste.</p>`;
     });
     
     function processAllData(leadData, dealsVendasData) {
@@ -61,24 +60,18 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         }).filter(Boolean);
 
-        // MQLs de Vendas (lógica inalterada, usa deals_vendas.csv)
         const mqlsVendas = dealsVendasData.map(row => {
             if (!row[mqlDateColumnVendas] || !row['Data e hora da criação do Lead']) return null;
             let unidade = bairrosCampeche.includes(row['Bairros (LS)']) ? 'MQL Vendas - Campeche' : 'MQL Vendas - Centro';
             return { id: row['ID'], nome: row['Nome do negócio'], mqlDate: parseDate(row[mqlDateColumnVendas]), leadDate: parseDate(row['Data e hora da criação do Lead']), fonte: row['Fonte'] || 'Não Informada', unidade: unidade };
         }).filter(Boolean);
 
-        // MQLs de Locação (NOVA LÓGICA, usa leads.csv)
         const mqlsLocacao = leadData.map(row => {
             const tipoNegociacao = row['Tipo de Negociação'] || row['Tipo de NegociaÃ§Ã£o'];
             if (tipoNegociacao === 'Locatários' && row['Etapa'] === mqlEtapaLocacao) {
                 return {
-                    id: row['ID'],
-                    nome: row['Nome do Lead'],
-                    mqlDate: parseDate(row['Criado']), // A data do MQL é a data de criação, como definido
-                    leadDate: parseDate(row['Criado']),
-                    fonte: row['Fonte'] || 'Não Informada',
-                    unidade: 'MQL Locação'
+                    id: row['ID'], nome: row['Nome do Lead'], mqlDate: parseDate(row['Criado']),
+                    leadDate: parseDate(row['Criado']), fonte: row['Fonte'] || 'Não Informada', unidade: 'MQL Locação'
                 };
             }
             return null;
@@ -88,17 +81,20 @@ document.addEventListener('DOMContentLoaded', () => {
         populateFilter(allLeads);
     }
     
-    // O restante do script continua exatamente o mesmo
-    function populateDynamicFilters(leads) { /* ... */ }
+    function populateDynamicFilters(leads) {
+        const motivosDescartePadrao = ['Atendimento Duplicado', 'Cadastro Duplicado', 'Contato Não Comercial'];
+        const motivos = [...new Set(leads.map(lead => lead.motivoDescarte).filter(Boolean))].sort();
+        motivosDescarteContainer.innerHTML = motivos.map(motivo => `<label><input type="checkbox" class="motivo-descarte-check" value="${motivo}" ${motivosDescartePadrao.includes(motivo) ? 'checked' : ''}> ${motivo}</label>`).join('');
+    }
+
+    // O restante do script continua o mesmo
     filterButton.addEventListener('click', applyFilters);
-    unidadeFilter.addEventListener('change', applyFilters);
     function applyFilters() { /* ... */ }
     function populateFilter(data) { /* ... */ }
     function updateDashboard(leads, mqls) { /* ... */ }
     function updateKPIs(leads, mqls) { /* ... */ }
     function showDrillModal(title, items, type = 'lead') { /* ... */ }
-    closeModalButton.onclick = () => { modal.style.display = 'none'; };
-    window.onclick = (event) => { if (event.target == modal) { modal.style.display = 'none'; } };
+    closeModalButton.onclick = () => { modal.style.display = 'none'; }; window.onclick = (event) => { if (event.target == modal) { modal.style.display = 'none'; } };
     leadsKpiCard.addEventListener('click', () => { showDrillModal('Detalhes de Leads (Filtro Atual)', currentFilteredLeads, 'lead'); });
     mqlKpiCard.addEventListener('click', () => { showDrillModal('Detalhes de MQLs (Filtro Atual)', currentFilteredMqls, 'mql'); });
     tablesContainer.addEventListener('click', (event) => { /* ... */ });
@@ -108,23 +104,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function createLeadsPorUnidadeChart(data) { /* ... */ }
 
     // Colando o restante das funções para garantir a integridade
-    populateDynamicFilters = (leads) => {
-        const motivosDescartePadrao = ['Atendimento Duplicado', 'Cadastro Duplicado', 'Contato Não Comercial'];
-        const motivos = [...new Set(leads.map(lead => lead.motivoDescarte).filter(Boolean))].sort();
-        const tipos = [...new Set(leads.map(lead => lead.tipoNegociacao).filter(Boolean))].sort();
-        motivosDescarteContainer.innerHTML = motivos.map(motivo => `<label><input type="checkbox" class="motivo-descarte-check" value="${motivo}" ${motivosDescartePadrao.includes(motivo) ? 'checked' : ''}> ${motivo}</label>`).join('');
-        tiposNegociacaoContainer.innerHTML = tipos.map(tipo => `<label><input type="checkbox" class="tipo-negociacao-check" value="${tipo}"> ${tipo}</label>`).join('');
-    };
     applyFilters = () => {
         const selectedUnidade = unidadeFilter.value;
         const startDate = startDateInput.value ? new Date(startDateInput.value + 'T00:00:00') : null;
         const endDate = endDateInput.value ? new Date(endDateInput.value + 'T23:59:59') : null;
         const motivosExcluir = [...document.querySelectorAll('.motivo-descarte-check:checked')].map(cb => cb.value);
-        const tiposExcluir = [...document.querySelectorAll('.tipo-negociacao-check:checked')].map(cb => cb.value);
         currentFilteredLeads = allLeads.filter(lead => {
             if (motivosExcluir.includes(lead.motivoDescarte)) return false;
-            if (tiposExcluir.includes(lead.tipoNegociacao)) return false;
-            if (!lead.leadDate) return false;
             if (startDate && lead.leadDate < startDate) return false;
             if (endDate && lead.leadDate > endDate) return false;
             if (selectedUnidade !== 'todos' && lead.unidade !== selectedUnidade) return false;
@@ -137,7 +123,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const leadCorrespondente = allLeads.find(l => l.id === mql.id);
             if(leadCorrespondente){
                  if (motivosExcluir.includes(leadCorrespondente.motivoDescarte)) return false;
-                 if (tiposExcluir.includes(leadCorrespondente.tipoNegociacao)) return false;
             }
             const mqlUnidadeCorresponde = `MQL ${selectedUnidade}`;
             if (selectedUnidade !== 'todos' && mql.unidade !== mqlUnidadeCorresponde && !(selectedUnidade === 'Locatários' && mql.unidade === 'MQL Locação')) return false;
