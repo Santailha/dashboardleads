@@ -8,7 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const kpiTotalLeads = document.getElementById('kpi-total-leads');
     const kpiTotalMqls = document.getElementById('kpi-total-mqls');
     const kpiConversao = document.getElementById('kpi-conversao');
-    const mqlKpiCard = document.getElementById('mql-kpi-card'); // Novo
+    const leadsKpiCard = document.getElementById('leads-kpi-card'); // Novo
+    const mqlKpiCard = document.getElementById('mql-kpi-card');
     const modal = document.getElementById('drill-modal');
     const modalTitle = document.getElementById('modal-title');
     const modalDetailsTable = document.getElementById('modal-details-table');
@@ -19,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let allMqls = [];
     let charts = {};
     let currentFilteredLeads = [];
-    let currentFilteredMqls = []; // Novo
+    let currentFilteredMqls = [];
 
     // === REGRAS DE NEGÓCIO ===
     const bairrosCampeche = [
@@ -33,7 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const mqlDateColumnLocacao = 'Data e Hora de entrada na fase Confirmação de visita loc.';
 
     // === INICIALIZAÇÃO E PROCESSAMENTO ===
-    // (O código de carregamento e processamento dos arquivos continua igual)
     Chart.register(ChartDataLabels);
     Chart.defaults.set('plugins.datalabels', { color: '#444', font: { weight: 'bold' } });
     const loadFile = (url) => new Promise((resolve, reject) => { Papa.parse(url, { download: true, header: true, skipEmptyLines: true, complete: results => resolve(results.data), error: err => reject(err) }); });
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tableHTML += `<tr><td>${item.id || ''}</td><td>${item.nome || ''}</td></tr>`;
             });
         } else {
-            tableHTML += `<tr><td colspan="2">Nenhum dado encontrado.</td></tr>`;
+            tableHTML += '<tr><td colspan="2">Nenhum dado encontrado.</td></tr>';
         }
         tableHTML += '</tbody></table>';
         modalDetailsTable.innerHTML = tableHTML;
@@ -65,7 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
     closeModalButton.onclick = () => { modal.style.display = 'none'; };
     window.onclick = (event) => { if (event.target == modal) { modal.style.display = 'none'; } };
     
-    // NOVO: Adiciona listener para o card de MQL e para a tabela
+    // Adiciona listeners para os cards e tabelas
+    leadsKpiCard.addEventListener('click', () => {
+        showDrillModal('Detalhes de Leads (Filtro Atual)', currentFilteredLeads, 'lead');
+    });
     mqlKpiCard.addEventListener('click', () => {
         showDrillModal('Detalhes de MQLs (Filtro Atual)', currentFilteredMqls, 'mql');
     });
@@ -73,9 +76,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.target.classList.contains('mql-cell')) {
             const fonte = event.target.dataset.fonte;
             const unidade = event.target.dataset.unidade;
-            const mqlUnidadeCorresponde = (unidade === 'Locatários') ? 'MQL Locação' : `MQL ${unidade}`;
-            const mqlsFiltrados = currentFilteredMqls.filter(mql => mql.unidade === mqlUnidadeCorresponde && mql.fonte === fonte);
-            showDrillModal(`MQLs de ${unidade} | Fonte: ${fonte}`, mqlsFiltrados, 'mql');
+            let mqlsFiltrados;
+
+            if (fonte === 'all') { // Clicou no total da tabela
+                const mqlUnidadeCorresponde = (unidade === 'Locatários') ? 'MQL Locação' : `MQL ${unidade}`;
+                 mqlsFiltrados = currentFilteredMqls.filter(mql => mql.unidade === mqlUnidadeCorresponde);
+                 showDrillModal(`MQLs de ${unidade} (Todos)`, mqlsFiltrados, 'mql');
+            } else { // Clicou em uma fonte específica
+                const mqlUnidadeCorresponde = (unidade === 'Locatários') ? 'MQL Locação' : `MQL ${unidade}`;
+                mqlsFiltrados = currentFilteredMqls.filter(mql => mql.unidade === mqlUnidadeCorresponde && mql.fonte === fonte);
+                showDrillModal(`MQLs de ${unidade} | Fonte: ${fonte}`, mqlsFiltrados, 'mql');
+            }
         }
     });
 
@@ -107,7 +118,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateDashboard(currentFilteredLeads, currentFilteredMqls);
     }
     
-    // (O resto do script continua igual)
     function populateFilter(data) { unidadeFilter.innerHTML = '<option value="todas">Todas as Unidades</option>'; const unidades = [...new Set(data.map(item => item.unidade))]; unidades.sort().forEach(unidade => { const option = document.createElement('option'); option.value = unidade; option.textContent = unidade; unidadeFilter.appendChild(option); }); }
     function updateDashboard(leads, mqls) { Object.values(charts).forEach(chart => chart.destroy()); updateKPIs(leads, mqls); createLeadsPorFonteChart(leads); createLeadsPorUnidadeChart(leads); createSummaryTables(leads, mqls); }
     function updateKPIs(leads, mqls) { const totalLeads = leads.length; const totalMqls = mqls.length; const conversao = totalLeads > 0 ? ((totalMqls / totalLeads) * 100).toFixed(1) + '%' : '0%'; kpiTotalLeads.textContent = totalLeads; kpiTotalMqls.textContent = totalMqls; kpiConversao.textContent = conversao; }
