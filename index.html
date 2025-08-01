@@ -18,20 +18,10 @@
 
     <main>
         <div class="kpi-container">
-            <div class="kpi-card" id="leads-kpi-card">
-                <h2>Total de Leads</h2>
-                <p id="kpi-total-leads">-</p>
-            </div>
-            <div class="kpi-card" id="mql-kpi-card">
-                <h2>Total de MQLs</h2>
-                <p id="kpi-total-mqls">-</p>
-            </div>
-            <div class="kpi-card">
-                <h2>Taxa de Conversão</h2>
-                <p id="kpi-conversao">-</p>
-            </div>
+            <div class="kpi-card" id="leads-kpi-card"><h2>Total de Leads</h2><p id="kpi-total-leads">-</p></div>
+            <div class="kpi-card" id="mql-kpi-card"><h2>Total de MQLs</h2><p id="kpi-total-mqls">-</p></div>
+            <div class="kpi-card"><h2>Taxa de Conversão</h2><p id="kpi-conversao">-</p></div>
         </div>
-
         <div class="filtros">
             <div class="filtro-main">
                 <div class="filtro-item"><label for="unidade-filter">Filtrar por Unidade:</label><select id="unidade-filter"><option value="todas">Todas as Unidades</option></select></div>
@@ -52,21 +42,12 @@
                 <button id="filter-button">Filtrar</button>
             </div>
         </div>
-
         <div class="dashboard-grid">
-            <div class="chart-container">
-                <h2>Leads por Fonte</h2>
-                <canvas id="leadsPorFonteChart"></canvas>
-            </div>
-            <div class="chart-container">
-                <h2>Leads por Unidade</h2>
-                <canvas id="leadsPorUnidadeChart"></canvas>
-            </div>
+            <div class="chart-container"><h2>Leads por Fonte</h2><canvas id="leadsPorFonteChart"></canvas></div>
+            <div class="chart-container"><h2>Leads por Unidade</h2><canvas id="leadsPorUnidadeChart"></canvas></div>
         </div>
-
         <div id="tables-container"></div>
     </main>
-
     <div id="drill-modal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
@@ -74,7 +55,6 @@
             <div id="modal-details-table"></div>
         </div>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
