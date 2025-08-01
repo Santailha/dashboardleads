@@ -42,8 +42,4 @@ main { max-width: 1200px; margin: 0 auto; }
 #leads-kpi-card, #mql-kpi-card, .mql-cell { cursor: pointer; transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; }
 #leads-kpi-card:hover, #mql-kpi-card:hover { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
 .mql-cell:hover { background-color: #e8e8e8 !important; }
-
-/* Esconde o filtro de unidade de venda por padrão */
-#unidade-venda-container {
-    display: none;
-}
+#unidade-venda-container { display: none; }
