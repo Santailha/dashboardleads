@@ -35,105 +35,15 @@ main { max-width: 1200px; margin: 0 auto; }
 #modal-details-table th, #modal-details-table td { border: 1px solid #ddd; padding: 8px; }
 #modal-details-table th { padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #3d357e; color: white; }
 
-/* NOVO: Estilos para indicar que MQLs são clicáveis */
-#mql-kpi-card, .mql-cell {
+/* Atualizado para incluir o card de Leads */
+#leads-kpi-card, #mql-kpi-card, .mql-cell {
     cursor: pointer;
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
-#mql-kpi-card:hover {
+#leads-kpi-card:hover, #mql-kpi-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 .mql-cell:hover {
-    background-color: #e0e0e0 !important;
-}
-
-/* Estilos para a página de Login */
-.login-body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #f4f7f9;
-}
-
-.login-container {
-    padding: 40px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    text-align: center;
-    width: 100%;
-    max-width: 400px;
-}
-
-.login-container #logo {
-    max-width: 200px;
-    margin-bottom: 20px;
-}
-
-.login-container h2 {
-    color: #3d357e;
-    margin-bottom: 20px;
-}
-
-.input-group {
-    text-align: left;
-    margin-bottom: 15px;
-}
-
-.input-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: #555;
-}
-
-.input-group input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    box-sizing: border-box;
-}
-
-.login-container button {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: 5px;
-    background-color: #edae0f;
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 10px;
-}
-
-.login-container button:hover {
-    background-color: #d49a0c;
-}
-
-.error-message {
-    color: red;
-    margin-top: 15px;
-    height: 20px;
-}
-
-/* Estilo para o botão de Sair */
-#logout-button {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    padding: 8px 16px;
-    background-color: #e74c3c;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-#logout-button:hover {
-    background-color: #c0392b;
+    background-color: #e8e8e8 !important;
 }
