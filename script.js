@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // === REGRAS DE NEGÓCIO ===
     const bairrosCampeche = ['Campeche', 'Morro das Pedras', 'Ribeirao da Ilha', 'Armação', 'Açores', 'Barra da Lagoa', 'Carianos', 'Costeira do Pirajubaé', 'Lagoa da Conceição', 'Novo Campeche', 'Praia Mole', 'Pântano do Sul', 'Rio Tavares', 'Tapera', 'Saco dos Limões'];
     const mqlDateColumnVendas = 'Fase Atendimento do Lead - Vendas';
-    const mqlEtapaLocacao = 'Ganho';
+    const mqlEtapaLocacao = 'Lead Ganho/Visita';
 
     // === INICIALIZAÇÃO ===
     Chart.register(ChartDataLabels);
@@ -45,19 +45,21 @@ document.addEventListener('DOMContentLoaded', () => {
         applyFilters();
     }).catch(err => {
         console.error("Erro ao carregar os arquivos CSV:", err);
-        tablesContainer.innerHTML = `<p style="color: red; text-align: center;">Erro ao carregar arquivos. Verifique se o repositório está Público e se os arquivos 'leads.csv' e 'deals_vendas.csv' existem.</p>`;
+        tablesContainer.innerHTML = `<p style="color: red; text-align: center;">Erro ao carregar arquivos. Verifique se o repositório está Público e se os arquivos 'leads.csv' e 'deals_vendas.csv' existem com os nomes exatos.</p>`;
     });
 
-    // CORREÇÃO: Função parseDate ajustada para incluir o horário
     const parseDate = (dateString) => {
         if (!dateString || typeof dateString !== 'string') return null;
         const parts = dateString.split(' ');
-        if (parts.length < 2) return null; // Precisa de data e hora
+        if (parts.length < 1) return null;
         const [datePart, timePart] = parts;
-        const [day, month, year] = datePart.split('/');
+        if (!datePart) return null;
+        const dateComponents = datePart.includes('/') ? datePart.split('/') : datePart.split('-');
+        if (dateComponents.length < 3) return null;
+        let [day, month, year] = dateComponents;
+        if (year.length < 4) [year, month, day] = dateComponents; // Handle yyyy-mm-dd format
         if (!day || !month || !year || year.length < 4) return null;
-        // Combina data e hora para um timestamp preciso
-        return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${timePart}`);
+        return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${timePart || '00:00:00'}`);
     };
     
     function processAllData(leadData, dealsVendasData) {
@@ -109,14 +111,13 @@ document.addEventListener('DOMContentLoaded', () => {
     tipoNegociacaoFilter.addEventListener('change', () => {
         unidadeVendaContainer.style.display = (tipoNegociacaoFilter.value === 'Compradores') ? 'flex' : 'none';
     });
-
     filterButton.addEventListener('click', applyFilters);
 
     function applyFilters() {
         const selectedTipo = tipoNegociacaoFilter.value;
         const selectedUnidadeVenda = unidadeVendaFilter.value;
-        const startDate = startDateInput.value ? new Date(startDateInput.value + 'T00:00:00') : null;
-        const endDate = endDateInput.value ? new Date(endDateInput.value + 'T23:59:59') : null;
+        const startDate = startDateInput.value ? new Date(startDateInput.value + 'T00:00:00Z') : null;
+        const endDate = endDateInput.value ? new Date(endDateInput.value + 'T23:59:59Z') : null;
         const motivosExcluir = [...document.querySelectorAll('.motivo-descarte-check:checked')].map(cb => cb.value);
         
         currentFilteredLeads = allLeads.filter(lead => {
@@ -133,25 +134,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!mql.leadDate) return false;
             if (startDate && mql.leadDate < startDate) return false;
             if (endDate && mql.leadDate > endDate) return false;
-
-            const leadCorrespondente = allLeads.find(l => l.leadDate && mql.leadDate && l.leadDate.getTime() === mql.leadDate.getTime() && l.nome === mql.nome);
             
-            if (leadCorrespondente) {
-                if (motivosExcluir.includes(leadCorrespondente.motivoDescarte)) return false;
-                if (selectedTipo !== 'todos' && leadCorrespondente.tipoNegociacao !== selectedTipo) return false;
-                if (selectedTipo === 'Compradores' && selectedUnidadeVenda !== 'todas' && leadCorrespondente.unidade !== selectedUnidadeVenda) return false;
-            } else {
-                 const mqlTipo = mql.unidade.includes('Vendas') ? 'Compradores' : 'Locatários';
-                 if (selectedTipo !== 'todos' && mqlTipo !== selectedTipo) return false;
+            const mqlTipoNegociacao = mql.unidade.includes('Vendas') ? 'Compradores' : 'Locatários';
+            if (selectedTipo !== 'todos' && mqlTipoNegociacao !== selectedTipo) {
+                return false;
             }
-            
+            if (selectedTipo === 'Compradores' && selectedUnidadeVenda !== 'todas') {
+                if (mql.unidade !== `MQL ${selectedUnidadeVenda}`) return false;
+            }
             return true;
         });
         
         updateDashboard(currentFilteredLeads, currentFilteredMqls);
     }
     
-    // O restante das funções não muda.
+    // O restante do script (UI, Gráficos, Tabelas) continua aqui...
     function updateDashboard(leads, mqls) { Object.values(charts).forEach(chart => chart.destroy()); updateKPIs(leads, mqls); createLeadsPorFonteChart(leads); createLeadsPorUnidadeChart(leads); createSummaryTables(leads, mqls); }
     function updateKPIs(leads, mqls) { const totalLeads = leads.length; const totalMqls = mqls.length; const conversao = totalLeads > 0 ? ((totalMqls / totalLeads) * 100).toFixed(1) + '%' : '0%'; kpiTotalLeads.textContent = totalLeads; kpiTotalMqls.textContent = totalMqls; kpiConversao.textContent = conversao; }
     function showDrillModal(title, items, type = 'lead') { modalTitle.textContent = title; const nameHeader = type === 'lead' ? 'Nome do Lead' : 'Nome do Negócio'; let tableHTML = `<table><thead><tr><th>ID</th><th>${nameHeader}</th></tr></thead><tbody>`; if (items.length > 0) { items.forEach(item => { tableHTML += `<tr><td>${item.id || ''}</td><td>${item.nome || ''}</td></tr>`; }); } else { tableHTML += '<tr><td colspan="2">Nenhum dado encontrado.</td></tr>'; } tableHTML += '</tbody></table>'; modalDetailsTable.innerHTML = tableHTML; modal.style.display = 'block'; }
