@@ -17,49 +17,35 @@
 
     <main>
         <div class="kpi-container">
-            <div class="kpi-card" id="leads-kpi-card">
-                <h2>Total de Leads</h2>
-                <p id="kpi-total-leads">-</p>
-            </div>
-            <div class="kpi-card" id="mql-kpi-card">
-                <h2>Total de MQLs</h2>
-                <p id="kpi-total-mqls">-</p>
-            </div>
-            <div class="kpi-card">
-                <h2>Taxa de Conversão</h2>
-                <p id="kpi-conversao">-</p>
-            </div>
+            <div class="kpi-card" id="leads-kpi-card"><h2>Total de Leads</h2><p id="kpi-total-leads">-</p></div>
+            <div class="kpi-card" id="mql-kpi-card"><h2>Total de MQLs</h2><p id="kpi-total-mqls">-</p></div>
+            <div class="kpi-card"><h2>Taxa de Conversão</h2><p id="kpi-conversao">-</p></div>
         </div>
 
         <div class="filtros">
-            <div class="filtro-item">
-                <label for="unidade-filter">Filtrar por Unidade:</label>
-                <select id="unidade-filter">
-                    <option value="todas">Todas as Unidades</option>
-                </select>
+            <div class="filtro-main">
+                <div class="filtro-item"><label for="unidade-filter">Filtrar por Unidade:</label><select id="unidade-filter"><option value="todas">Todas as Unidades</option></select></div>
+                <div class="filtro-item"><label for="start-date">Data Início (Criação do Lead):</label><input type="date" id="start-date"></div>
+                <div class="filtro-item"><label for="end-date">Data Fim (Criação do Lead):</label><input type="date" id="end-date"></div>
             </div>
-            <div class="filtro-item">
-                <label for="start-date">Data Início (Criação do Lead):</label>
-                <input type="date" id="start-date">
+            <div class="filtro-dynamic">
+                <div class="filtro-coluna" id="tipos-negociacao-container">
+                    <h4>Excluir Tipos de Negociação:</h4>
+                    <div id="tipos-negociacao-filters" class="checkbox-group"></div>
+                </div>
+                <div class="filtro-coluna" id="motivos-descarte-container">
+                    <h4>Excluir Motivos de Descarte:</h4>
+                    <div id="motivos-descarte-filters" class="checkbox-group"></div>
+                </div>
             </div>
-            <div class="filtro-item">
-                <label for="end-date">Data Fim (Criação do Lead):</label>
-                <input type="date" id="end-date">
-            </div>
-            <div class="filtro-item">
+            <div class="filtro-action">
                 <button id="filter-button">Filtrar</button>
             </div>
         </div>
 
         <div class="dashboard-grid">
-            <div class="chart-container">
-                <h2>Leads por Fonte</h2>
-                <canvas id="leadsPorFonteChart"></canvas>
-            </div>
-            <div class="chart-container">
-                <h2>Leads por Unidade</h2>
-                <canvas id="leadsPorUnidadeChart"></canvas>
-            </div>
+            <div class="chart-container"><h2>Leads por Fonte</h2><canvas id="leadsPorFonteChart"></canvas></div>
+            <div class="chart-container"><h2>Leads por Unidade</h2><canvas id="leadsPorUnidadeChart"></canvas></div>
         </div>
 
         <div id="tables-container"></div>
